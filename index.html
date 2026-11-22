@@ -46,6 +46,11 @@ body.touch #rldBtn { display:flex; }
 body.touch .sbtn { display:flex; }
 #camBtn { top:56px; }
 #muteBtn { top:116px; }
+#scopeBtn { top:176px; }
+#scopeOv { inset:0; background:radial-gradient(circle at 50% 50%, transparent 0, transparent 30vmin, #000 30.4vmin); }
+#scopeOv::before, #scopeOv::after { content:""; position:absolute; background:rgba(0,0,0,.85); }
+#scopeOv::before { left:0; right:0; top:50%; height:2px; margin-top:-1px; }
+#scopeOv::after { top:0; bottom:0; left:50%; width:2px; margin-left:-1px; }
 #overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:20px; background:rgba(11,17,24,.78); z-index:5; }
 #overlay h1 { font-family:var(--font-head); font-size:2.2rem; margin:0; text-wrap:balance; }
 #overlay p { margin:0; color:var(--muted); max-width:38ch; line-height:1.5; font-size:.95rem; }
@@ -56,6 +61,7 @@ body.touch .sbtn { display:flex; }
 <body>
 
 <div id="game">
+  <div class="hud" id="scopeOv" hidden></div>
   <div class="hud" id="stats">
     <div class="pill" id="statTxt">बचे: 12 · किल: 0</div>
     <div id="hpWrap"><div id="hpBar"></div></div>
@@ -72,12 +78,12 @@ body.touch .sbtn { display:flex; }
   <div class="ctl" id="fireBtn">फ़ायर</div>
   <div class="sbtn" id="camBtn">कैमरा</div>
   <div class="sbtn" id="muteBtn">ध्वनि</div>
-  <div id="overlay">
+  <div class="sbtn" id="scopeBtn">स्कोप</div>  <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
     <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 5 · दिखती गोलियाँ</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 7 · स्कोप ठीक किया</p>
   </div>
 </div>
 
@@ -88,8 +94,8 @@ body.touch .sbtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · स्क्रीन पर उँगली घुमाना: देखना · फ़ायर और रीलोड बटन दाएँ तरफ़ · ऊपर दाएँ गोल बटन: कैमरा और आवाज़।'
-    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift: दौड़ना · V: कैमरा बदलना · M: आवाज़ बंद/चालू।';
+    ? 'बायाँ गोला: चलना · स्क्रीन पर उँगली घुमाना: देखना · फ़ायर और रीलोड बटन दाएँ तरफ़ · ऊपर दाएँ गोल बटन: कैमरा, आवाज़ और स्कोप।'
+    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift: दौड़ना · V: कैमरा बदलना · M: आवाज़ बंद/चालू · दायाँ क्लिक या Z: स्कोप।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
@@ -202,7 +208,7 @@ body.touch .sbtn { display:flex; }
   var player = { x: 0, z: 60, hp: 100, yaw: 0, pitch: 0, alive: true };
   var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 95, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
   var rc = new THREE.Raycaster();
-  var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0;
+  var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
 
   function makeBot(x, z) {
@@ -373,13 +379,13 @@ body.touch .sbtn { display:flex; }
     if (reloadT > 0 || fireT > 0) return;
     if (mag <= 0) { reload(); return; }
     mag--; fireT = 0.11; kick = 0.06; flashT = 0.04; player.pitch += 0.004; sfx('shot');
-    var sp = 0.006;
+    var sp = scoped ? 0.0015 : 0.006;
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
     for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push(bots[i].parts[0], bots[i].parts[1], bots[i].parts[2]);
     var hits = rc.intersectObjects(list, false);
     camera.updateMatrixWorld(true); pm.updateMatrixWorld(true);
-    var org = tpp ? pm.localToWorld(new THREE.Vector3(0.35, 1.15, 0.85)) : gun.localToWorld(new THREE.Vector3(0, 0, -0.4));
+    var org = (tpp && !scoped) ? pm.localToWorld(new THREE.Vector3(0.35, 1.15, 0.85)) : gun.localToWorld(new THREE.Vector3(0, 0, -0.4));
     var sd = hits.length ? hits[0].distance : 90;
     spawnBullet(org, rc.ray.origin.clone().addScaledVector(rc.ray.direction, sd), 'p');
     if (hits.length && hits[0].object.userData.bot) {
@@ -408,11 +414,12 @@ body.touch .sbtn { display:flex; }
   function placeCamera(moving) {
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw), cp = Math.cos(player.pitch), sp = Math.sin(player.pitch);
     camera.rotation.set(player.pitch, player.yaw, 0);
-    gun.visible = !tpp;
-    pm.visible = tpp && player.alive;
+    var fp = !tpp || scoped;
+    gun.visible = fp && !scoped;
+    pm.visible = !fp && player.alive;
     pm.position.set(player.x, moving ? Math.abs(Math.sin(matchT * 10)) * 0.06 : 0, player.z);
     pm.rotation.y = player.yaw + Math.PI;
-    if (!tpp) { camera.position.set(player.x, 1.65, player.z); return; }
+    if (fp) { camera.position.set(player.x, 1.65, player.z); return; }
     cpiv.set(player.x + cy * 0.6, 1.7, player.z - sy * 0.6);
     cdir.set(sy * cp, -sp, cy * cp).normalize();
     var dist = camera.aspect < 1 ? 5.4 : 3.6;
@@ -428,6 +435,11 @@ body.touch .sbtn { display:flex; }
     $('muteBtn').textContent = muted ? 'म्यूट' : 'ध्वनि';
     toast(muted ? 'आवाज़ बंद' : 'आवाज़ चालू');
   }
+  function setScope(v) {
+    scoped = v; $('scopeOv').hidden = !v; $('cross').hidden = v;
+    if (!v) { camera.fov = 75; camera.updateProjectionMatrix(); }
+  }
+  function toggleScope() { if (state !== 'play') return; setScope(!scoped); sfx('reload'); }
   var bass = [110, 110, 130.8, 98, 110, 146.8, 130.8, 98];
   setInterval(function () {
     if (state !== 'play' || !ac || muted) return;
@@ -446,12 +458,12 @@ body.touch .sbtn { display:flex; }
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
     for (var k = 0; k < 11; k++) { var s = freeSpot(8, 88, player, 28); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; mag = 30; reloadT = 0; fireT = 0; firing = false; zoneR = 95; dmgFlash = 0;
-    state = 'play'; $('overlay').hidden = true;
+    setScope(false); state = 'play'; $('overlay').hidden = true;
     initAudio(); sfx('start');
     if (!isTouch && game.requestPointerLock) { try { var pr = game.requestPointerLock(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   }
   function endGame(win) {
-    state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
+    setScope(false); state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
     if (document.exitPointerLock) { try { document.exitPointerLock(); } catch (e) {} }
     $('ovTitle').textContent = win ? 'जीत गए! आख़िरी खिलाड़ी आप हैं' : 'आप आउट हो गए';
     $('ovText').textContent = 'किल: ' + kills + ' · समय: ' + Math.floor(matchT) + ' सेकंड';
@@ -466,14 +478,17 @@ body.touch .sbtn { display:flex; }
     if (state !== 'play') return;
     if (e.code === 'KeyR') reload();
     if (e.code === 'KeyV') toggleCam();
+    if (e.code === 'KeyZ') toggleScope();
     if (e.code === 'Space' || e.code === 'KeyF') { firing = true; e.preventDefault(); }
   });
   window.addEventListener('keyup', function (e) { keys[e.code] = false; if (e.code === 'Space' || e.code === 'KeyF') firing = false; });
 
+  game.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   var dragging = false;
-  function look(dx, dy, s) { player.yaw -= dx * s; player.pitch -= dy * s; player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch)); }
+  function look(dx, dy, s) { var k = scoped ? 0.35 : 1; player.yaw -= dx * s * k; player.pitch -= dy * s * k; player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch)); }
   game.addEventListener('mousedown', function (e) {
     if (state !== 'play' || isTouch) return;
+    if (e.button === 2) { toggleScope(); return; }
     if (document.pointerLockElement === game) firing = true;
     else { dragging = true; if (game.requestPointerLock) { try { var pr = game.requestPointerLock(); if (pr && pr.catch) pr.catch(function () {}); } catch (er) {} } }
   });
@@ -502,6 +517,7 @@ body.touch .sbtn { display:flex; }
       else if (tg.id === 'rldBtn') { reload(); }
       else if (tg.id === 'camBtn') { toggleCam(); }
       else if (tg.id === 'muteBtn') { toggleMute(); }
+      else if (tg.id === 'scopeBtn') { toggleScope(); }
       else if (lookId === null) { lookId = t.identifier; lookLX = t.clientX; lookLY = t.clientY; }
     }
   }, { passive: false });
@@ -538,6 +554,8 @@ body.touch .sbtn { display:flex; }
     player.z += (-cy * fwd - sy * str) * sp * dt;
     resolve(player, 0.45);
     placeCamera(ml > 0.1);
+    var tf = scoped ? 24 : 75;
+    if (Math.abs(camera.fov - tf) > 0.1) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 14); camera.updateProjectionMatrix(); }
     if (ml > 0.1) { stepT -= dt * sp / 6; if (stepT <= 0) { stepT = 0.4; sfx('step'); } }
 
     var out = Math.hypot(player.x, player.z) > zoneR;
