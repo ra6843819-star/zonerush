@@ -50,6 +50,7 @@ body.touch #sbar { display:flex; }
 .sbtn.on { background:var(--accent); color:var(--accent-fg); border-color:#fff; }
 .abtn { position:absolute; right:24px; min-width:56px; height:38px; padding:0 12px; border-radius:19px; border:2px solid #fff; color:#1a1405; font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center; z-index:3; touch-action:none; cursor:pointer; }
 #vaultBtn { bottom:106px; background:rgba(255,200,61,.92); }
+#carBtn { bottom:198px; background:rgba(120,190,255,.95); }
 #pickBtn { bottom:152px; background:rgba(120,220,140,.95); }
 #swapBtn { right:156px; bottom:30px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.5); color:#fff; font-weight:700; display:none; align-items:center; justify-content:center; font-size:.6rem; }
 body.touch #swapBtn { display:flex; }
@@ -105,13 +106,14 @@ body.touch #runBtn { display:flex; }
   </div>
   <div class="abtn" id="vaultBtn" hidden>कूदें</div>
   <div class="abtn" id="pickBtn" hidden>उठाएँ</div>
+  <div class="abtn" id="carBtn" hidden>बैठें</div>
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
     <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 13 · साफ़ लेआउट</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 15 · बाइक, कार, रिक्शा</p>
   </div>
 </div>
 
@@ -122,8 +124,8 @@ body.touch #runBtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन दबाकर तेज़ दौड़िए, फिर दबाकर वापस चलिए · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · पीली खिड़की के पास "कूदें"।'
-    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप · E: उठाना या खिड़की से कूदना · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
+    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन दबाकर तेज़ दौड़िए, फिर दबाकर वापस चलिए · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: जोयस्टिक से चलाइए, टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
+    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
@@ -404,11 +406,25 @@ body.touch #runBtn { display:flex; }
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.start(t); o.stop(t + dur);
   }
+  // असली बंदूक जैसी आवाज़: तेज़ "तड़ाक" + भारी "धम" + गूँज
+  var GS = {
+    pistol: { crack: 0.9, cf: 4200, boomF: 900, boomD: 0.14, thump: 190, thD: 0.12, echo: 0.0, echoD: 0 },
+    smg: { crack: 0.8, cf: 5000, boomF: 1300, boomD: 0.1, thump: 220, thD: 0.08, echo: 0.0, echoD: 0 },
+    rifle: { crack: 1.0, cf: 3600, boomF: 700, boomD: 0.26, thump: 140, thD: 0.18, echo: 0.22, echoD: 0.12 },
+    sniper: { crack: 1.2, cf: 3000, boomF: 450, boomD: 0.5, thump: 90, thD: 0.32, echo: 0.35, echoD: 0.18 }
+  };
+  function gunshot(type, v, pan) {
+    var p = GS[type] || GS.rifle;
+    noise(0.045, p.cf, 0.6, 'highpass', 0.9 * p.crack * v, pan);
+    noise(p.boomD, p.boomF, 0.5, 'lowpass', 1.0 * v, pan);
+    tone(p.thump, 38, p.thD, 'sine', 0.95 * v, pan);
+    if (p.echo) setTimeout(function () { if (ac && !muted) { noise(p.boomD * 1.6, p.boomF * 0.7, 0.5, 'lowpass', p.echo * v, pan); } }, 1000 * p.echoD + 60);
+  }
   function sfx(name, a) {
     if (!ac || muted) return;
     try {
-      if (name === 'shot') { noise(0.18, 1600, 0.7, 'bandpass', 0.6); noise(0.1, 5500, 0.5, 'highpass', 0.22); tone(170, 45, 0.16, 'sine', 0.75); }
-      else if (name === 'botshot') { noise(0.16, 1400, 0.7, 'bandpass', 0.5 * a.vol, a.pan); tone(140, 45, 0.14, 'sine', 0.55 * a.vol, a.pan); }
+      if (name === 'shot') gunshot(a || 'rifle', 1, 0);
+      else if (name === 'botshot') gunshot('rifle', 0.7 * a.vol, a.pan);
       else if (name === 'hit') tone(1500, 900, 0.07, 'square', 0.1);
       else if (name === 'head') { tone(2200, 1300, 0.1, 'square', 0.13); tone(1100, 700, 0.14, 'triangle', 0.14); }
       else if (name === 'kill') { tone(660, 660, 0.12, 'triangle', 0.25); setTimeout(function () { if (ac && !muted) tone(990, 990, 0.2, 'triangle', 0.25); }, 100); }
@@ -420,6 +436,7 @@ body.touch #runBtn { display:flex; }
       else if (name === 'win') [523, 659, 784, 1046].forEach(function (f, i) { setTimeout(function () { if (ac && !muted) tone(f, f, 0.3, 'triangle', 0.3); }, i * 150); });
       else if (name === 'lose') tone(320, 70, 0.9, 'sawtooth', 0.25);
       else if (name === 'start') tone(440, 880, 0.3, 'triangle', 0.25);
+      else if (name === 'engine') tone(60 + a * 7, 52 + a * 7, 0.15, 'sawtooth', 0.07);
       else if (name === 'pickup') tone(700, 1100, 0.09, 'triangle', 0.22);
     } catch (e) {}
   }
@@ -553,7 +570,7 @@ body.touch #runBtn { display:flex; }
       it.g.userData.mk.position.y = 1.15 + Math.sin(it.t * 3) * 0.1; it.g.rotation.y += dt * 1.5;
       var dx = it.x - player.x, dz = it.z - player.z, d2 = dx * dx + dz * dz;
       if (d2 > 2500) continue;
-      if (WEAPONS[it.type]) { if (d2 < bd) { bd = d2; best = it; } }
+      if (WEAPONS[it.type]) { if (!drive && d2 < bd) { bd = d2; best = it; } }
       else if (d2 < 1.5 * 1.5 && collect(it)) removeLoot(it);
     }
     nearLoot = best;
@@ -561,7 +578,7 @@ body.touch #runBtn { display:flex; }
     if (label !== pickShown) { pickShown = label; $('pickBtn').hidden = !best; if (best) $('pickBtn').textContent = label; }
   }
   function doPick() {
-    if (!nearLoot || state !== 'play') return false;
+    if (!nearLoot || state !== 'play' || drive) return false;
     var it = nearLoot;
     if (takeWeapon(it.type)) { removeLoot(it); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; }
     return true;
@@ -609,6 +626,118 @@ body.touch #runBtn { display:flex; }
     else if (a.charAt(0) === 'w') { equip(parseInt(a.charAt(1), 10)); renderBag(); }
   }
 
+
+  // ---------- गाड़ियाँ: बाइक, कार, रिक्शा ----------
+  var VEH = {
+    bike: { n: 'बाइक', max: 17, acc: 15, turn: 2.3, r: 0.6 },
+    car: { n: 'कार', max: 22, acc: 11, turn: 1.8, r: 1.3 },
+    rick: { n: 'रिक्शा', max: 12, acc: 8, turn: 1.7, r: 1.1 }
+  };
+  var vehicles = [], drive = null, carShown = '', engT = 0;
+  var carCols = [0xc0392b, 0x2e86c1, 0x27ae60, 0xf1c40f, 0xecf0f1, 0x8e44ad];
+  function vehMesh(type) {
+    var g = new THREE.Group();
+    function bx(w, h, d, c, x, y, z) { var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); g.add(m); return m; }
+    function wh(r, w, x, z) { var m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 12), mat(0x15181d)); m.rotation.z = Math.PI / 2; m.position.set(x, r, z); g.add(m); }
+    var col = pick(carCols);
+    if (type === 'bike') {
+      wh(0.33, 0.12, 0, -0.65); wh(0.33, 0.12, 0, 0.65);
+      bx(0.16, 0.22, 1.0, 0x2a2f38, 0, 0.55, 0); bx(0.26, 0.2, 0.42, col, 0, 0.8, -0.12);
+      bx(0.22, 0.08, 0.5, 0x15181d, 0, 0.8, 0.32); bx(0.7, 0.05, 0.06, 0x9aa5ae, 0, 1.08, -0.55); bx(0.06, 0.55, 0.06, 0x9aa5ae, 0, 0.72, -0.58);
+      bx(0.14, 0.12, 0.1, 0xffe27a, 0, 0.98, -0.68);
+    } else if (type === 'car') {
+      wh(0.38, 0.26, -0.95, -1.2); wh(0.38, 0.26, 0.95, -1.2); wh(0.38, 0.26, -0.95, 1.2); wh(0.38, 0.26, 0.95, 1.2);
+      bx(1.8, 0.6, 3.8, col, 0, 0.7, 0); bx(1.5, 0.55, 1.9, 0x9fd0e8, 0, 1.25, 0.25); bx(1.56, 0.08, 2.0, col, 0, 1.56, 0.25);
+      bx(0.4, 0.18, 0.08, 0xffe27a, -0.55, 0.8, -1.92); bx(0.4, 0.18, 0.08, 0xffe27a, 0.55, 0.8, -1.92);
+      bx(0.4, 0.18, 0.08, 0xd02b2b, -0.55, 0.8, 1.92); bx(0.4, 0.18, 0.08, 0xd02b2b, 0.55, 0.8, 1.92);
+    } else {
+      wh(0.3, 0.16, 0, -1.2); wh(0.3, 0.2, -0.7, 0.8); wh(0.3, 0.2, 0.7, 0.8);
+      bx(1.3, 0.55, 2.0, 0x2f8f4e, 0, 0.7, 0.35); bx(1.3, 0.5, 0.9, 0xf2c230, 0, 1.2, 0.8); bx(0.5, 0.65, 0.7, 0xf2c230, 0, 0.8, -0.95);
+      bx(1.45, 0.08, 2.0, 0x15181d, 0, 1.75, 0.35); bx(0.06, 0.55, 0.06, 0x15181d, -0.62, 1.48, -0.55); bx(0.06, 0.55, 0.06, 0x15181d, 0.62, 1.48, -0.55);
+      bx(0.14, 0.14, 0.1, 0xffe27a, 0, 0.95, -1.32);
+    }
+    return g;
+  }
+  function addVehicle(type, x, z, h) {
+    var m = vehMesh(type); m.position.set(x, 0, z); m.rotation.y = h; scene.add(m);
+    vehicles.push({ type: type, x: x, z: z, h: h, sp: 0, m: m });
+  }
+  function clearVehicles() { for (var i = 0; i < vehicles.length; i++) scene.remove(vehicles[i].m); vehicles = []; drive = null; carShown = ''; $('carBtn').hidden = true; }
+  function vehSpot(near) {
+    for (var k = 0; k < 60; k++) {
+      var x, z;
+      if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
+      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 86); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 90 || blocked(x, z, 3)) continue;
+      var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
+      if (ok) return { x: x, z: z };
+    }
+    return null;
+  }
+  function spawnVehicles() {
+    clearVehicles();
+    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
+    s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
+    for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
+  }
+  function nearVehicle() {
+    var best = null, bd = 3.4 * 3.4;
+    for (var i = 0; i < vehicles.length; i++) {
+      var v = vehicles[i], dx = v.x - player.x, dz = v.z - player.z, d2 = dx * dx + dz * dz;
+      if (d2 < bd) { bd = d2; best = v; }
+    }
+    return best;
+  }
+  function enterVehicle(v) {
+    drive = v; setScope(false); firing = false; toggleBag(false); vault = null; vaultY = 0; setRun(false);
+    player.x = v.x; player.z = v.z; player.yaw = v.h; player.pitch = -0.18; v.sp = 0;
+    toast(VEH[v.type].n + ': जोयस्टिक ऊपर = आगे, दाएँ/बाएँ = मोड़'); sfx('pickup');
+  }
+  function exitVehicle() {
+    if (!drive) return;
+    var v = drive, T = VEH[v.type], d = T.r + 1.0;
+    drive = null; v.sp = 0; v.x = player.x; v.z = player.z;
+    player.x = v.x + Math.cos(v.h) * d; player.z = v.z - Math.sin(v.h) * d; resolve(player, 0.45);
+    player.pitch = 0; sfx('pickup');
+  }
+  function vehicleAct() {
+    if (state !== 'play') return false;
+    if (drive) { exitVehicle(); return true; }
+    var v = nearVehicle(); if (!v || vault) return false;
+    enterVehicle(v); return true;
+  }
+  function driveStep(dt, thr, steer) {
+    var v = drive, T = VEH[v.type];
+    if (thr > 0.05) v.sp += T.acc * thr * dt;
+    else if (thr < -0.05) v.sp += T.acc * 1.3 * thr * dt;
+    else v.sp -= v.sp * Math.min(1, 1.5 * dt);
+    v.sp = Math.max(-T.max * 0.4, Math.min(T.max, v.sp));
+    v.h -= steer * T.turn * dt * Math.min(1, Math.abs(v.sp) / 4);
+    var ox = player.x, oz = player.z;
+    player.x += -Math.sin(v.h) * v.sp * dt; player.z += -Math.cos(v.h) * v.sp * dt;
+    var tx = player.x, tz = player.z;
+    resolve(player, T.r);
+    if (Math.abs(player.x - tx) + Math.abs(player.z - tz) > 0.01) { if (Math.abs(v.sp) > 6) { sfx('hurt'); toast('टक्कर!'); } v.sp *= 0.3; }
+    player.yaw = v.h; v.x = player.x; v.z = player.z;
+    v.m.position.set(v.x, 0, v.z); v.m.rotation.y = v.h;
+    if (Math.abs(v.sp) > 6) {
+      for (var i = 0; i < bots.length; i++) {
+        var b = bots[i]; if (!b.alive) continue;
+        var dx = b.x - v.x, dz = b.z - v.z;
+        if (dx * dx + dz * dz < (T.r + 0.6) * (T.r + 0.6)) { b.hp -= 100; hitT = 0.2; sfx('head'); if (b.hp <= 0) killBot(b, player); }
+      }
+    }
+    engT -= dt; if (engT <= 0) { engT = 0.16; sfx('engine', Math.abs(v.sp)); }
+  }
+  function updateCarUI() {
+    var label = '';
+    if (state === 'play' && player.alive && !vault) {
+      if (drive) label = 'उतरें' + (isTouch ? '' : ' (E)');
+      else { var v = nearVehicle(); if (v) label = 'बैठें: ' + VEH[v.type].n + (isTouch ? '' : ' (E)'); }
+    }
+    if (label !== carShown) { carShown = label; $('carBtn').hidden = !label; if (label) $('carBtn').textContent = label; }
+  }
+
   function killBot(b, killer) {
     if (!b.alive) return;
     b.alive = false; scene.remove(b.g); dropLoot(b);
@@ -617,6 +746,7 @@ body.touch #runBtn { display:flex; }
   }
   function damagePlayer(d, quiet) {
     if (!player.alive || state !== 'play') return;
+    if (drive) d *= 0.75;
     if (!quiet && armor > 0) { var ab = Math.min(armor, d * 0.5); armor -= ab; d -= ab; }
     player.hp -= d;
     if (quiet) dmgFlash = Math.max(dmgFlash, 0.25); else { dmgFlash = 0.55; sfx('hurt'); }
@@ -706,10 +836,10 @@ body.touch #runBtn { display:flex; }
   }
   function clearBullets() { for (var i = 0; i < bullets.length; i++) scene.remove(bullets[i].m); bullets = []; }
   function shoot() {
-    if (reloadT > 0 || fireT > 0 || bagOpen) return;
+    if (reloadT > 0 || fireT > 0 || bagOpen || drive) return;
     var w = W();
     if (mag <= 0) { if (reserve > 0) reload(); else if (fireT <= 0) { toast('गोलियाँ ख़त्म'); fireT = 0.6; } return; }
-    mag--; fireT = w.rate; kick = 0.06; flashT = 0.04; player.pitch += w.recoil; sfx('shot');
+    mag--; fireT = w.rate; kick = 0.06; flashT = 0.04; player.pitch += w.recoil; sfx('shot', slots[cur]);
     var sp = scoped ? w.spread * 0.25 : w.spread;
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
@@ -740,6 +870,17 @@ body.touch #runBtn { display:flex; }
   function placeCamera(moving) {
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw), cp = Math.cos(player.pitch), sp = Math.sin(player.pitch);
     camera.rotation.set(player.pitch, player.yaw, 0);
+    if (drive) {
+      gun.visible = false; pm.visible = false;
+      cpiv.set(player.x, 1.8, player.z);
+      cdir.set(sy * cp, -sp, cy * cp).normalize();
+      var dd = camera.aspect < 1 ? 8 : 6.2;
+      rc.set(cpiv, cdir); rc.far = dd;
+      var hh = rc.intersectObjects(obsMeshes, false);
+      if (hh.length) dd = Math.max(1.5, hh[0].distance - 0.3);
+      camera.position.set(cpiv.x + cdir.x * dd, Math.max(0.8, cpiv.y + cdir.y * dd + 0.2), cpiv.z + cdir.z * dd);
+      return;
+    }
     var fp = !tpp || scoped;
     gun.visible = fp && !scoped;
     pm.visible = !fp && player.alive;
@@ -765,7 +906,7 @@ body.touch #runBtn { display:flex; }
     scoped = v; $('scopeOv').hidden = !v; $('cross').hidden = v;
     if (!v) { camera.fov = 75; camera.updateProjectionMatrix(); }
   }
-  function toggleScope() { if (state !== 'play') return; setScope(!scoped); sfx('reload'); }
+  function toggleScope() { if (state !== 'play' || drive) return; setScope(!scoped); sfx('reload'); }
   /* खिड़की से कूदना: खिड़की के पास आने पर "कूदें" बटन दिखता है, दबाने पर आप दीवार के पार पहुँच जाते हैं */
   var vault = null, vaultY = 0, vaultShown = false;
   function nearWindow() {
@@ -797,12 +938,13 @@ body.touch #runBtn { display:flex; }
     if (vault.t >= 1) { vault = null; vaultY = 0; resolve(player, 0.45); sfx('step'); }
   }
   function updateVaultUI() {
-    var show = state === 'play' && !vault && player.alive && !!nearWindow();
+    var show = state === 'play' && !vault && !drive && player.alive && !!nearWindow();
     if (show !== vaultShown) { vaultShown = show; $('vaultBtn').hidden = !show; }
   }
   if (!isTouch) $('vaultBtn').textContent = 'कूदें (E)';
   $('vaultBtn').addEventListener('mousedown', function (e) { e.stopPropagation(); doVault(); });
   $('pickBtn').addEventListener('mousedown', function (e) { e.stopPropagation(); doPick(); });
+  $('carBtn').addEventListener('mousedown', function (e) { e.stopPropagation(); vehicleAct(); });
   $('bagPanel').addEventListener('mousedown', function (e) { e.stopPropagation(); });
   $('bagPanel').addEventListener('click', function (e) { var a = e.target.closest ? e.target.closest('[data-act]') : null; if (a) uiAct(a.getAttribute('data-act')); });
   var bass = [110, 110, 130.8, 98, 110, 146.8, 130.8, 98];
@@ -824,13 +966,13 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 11; k++) { var s = freeSpot(8, 88, player, 28); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = 95; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
-    toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot();
+    toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
     setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
     initAudio(); sfx('start');
     if (!isTouch && game.requestPointerLock) { try { var pr = game.requestPointerLock(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   }
   function endGame(win) {
-    setScope(false); toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true;
+    setScope(false); toggleBag(false); setRun(false); if (drive) { drive.sp = 0; drive = null; } carShown = ''; $('carBtn').hidden = true; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true;
     vault = null; vaultY = 0; vaultShown = false; $('vaultBtn').hidden = true; state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
     if (document.exitPointerLock) { try { document.exitPointerLock(); } catch (e) {} }
     $('ovTitle').textContent = win ? 'जीत गए! आख़िरी खिलाड़ी आप हैं' : 'आप आउट हो गए';
@@ -847,7 +989,7 @@ body.touch #runBtn { display:flex; }
     if (e.code === 'KeyR') reload();
     if (e.code === 'KeyV') toggleCam();
     if (e.code === 'KeyZ') toggleScope();
-    if (e.code === 'KeyE') { if (!doPick()) doVault(); }
+    if (e.code === 'KeyE') { if (!drive && doPick()) { } else if (!vehicleAct()) doVault(); }
     if (e.code === 'KeyB') toggleBag();
     if (e.code === 'KeyH') useMed();
     if (e.code === 'KeyQ') nextWeapon();
@@ -860,7 +1002,7 @@ body.touch #runBtn { display:flex; }
 
   game.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   var dragging = false;
-  function look(dx, dy, s) { var k = scoped ? 0.35 : 1; player.yaw -= dx * s * k; player.pitch -= dy * s * k; player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch)); }
+  function look(dx, dy, s) { if (drive) return; var k = scoped ? 0.35 : 1; player.yaw -= dx * s * k; player.pitch -= dy * s * k; player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch)); }
   game.addEventListener('mousedown', function (e) {
     if (state !== 'play' || isTouch) return;
     if (e.button === 2) { toggleScope(); return; }
@@ -899,6 +1041,7 @@ body.touch #runBtn { display:flex; }
       else if (tg.id === 'scopeBtn') { toggleScope(); }
       else if (tg.id === 'vaultBtn') { doVault(); }
       else if (tg.id === 'pickBtn') { doPick(); }
+      else if (tg.id === 'carBtn') { vehicleAct(); }
       else if (tg.id === 'bagBtn') { toggleBag(); }
       else if (tg.id === 'swapBtn') { nextWeapon(); }
       else if (tg.id === 'runBtn') { setRun(); }
@@ -934,16 +1077,17 @@ body.touch #runBtn { display:flex; }
     var ml = Math.sqrt(fwd * fwd + str * str); if (ml > 1) { fwd /= ml; str /= ml; }
     var sp = (running || keys.ShiftLeft || keys.ShiftRight) ? 8.5 : 4.5;
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
-    if (vault) stepVault(dt);
+    if (drive) driveStep(dt, fwd, str);
+    else if (vault) stepVault(dt);
     else {
       player.x += (-sy * fwd + cy * str) * sp * dt;
       player.z += (-cy * fwd - sy * str) * sp * dt;
       resolve(player, 0.45);
     }
-    placeCamera(ml > 0.1 || !!vault); updateVaultUI();
+    placeCamera(ml > 0.1 || !!vault); updateVaultUI(); updateCarUI();
     var tf = scoped ? 24 : 75;
     if (Math.abs(camera.fov - tf) > 0.1) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 14); camera.updateProjectionMatrix(); }
-    if (ml > 0.1) { stepT -= dt * sp / 6; if (stepT <= 0) { stepT = 0.4; sfx('step'); } }
+    if (ml > 0.1 && !drive) { stepT -= dt * sp / 6; if (stepT <= 0) { stepT = 0.4; sfx('step'); } }
 
     var out = Math.hypot(player.x, player.z) > zoneR;
     $('zoneWarn').hidden = !out;
@@ -967,7 +1111,8 @@ body.touch #runBtn { display:flex; }
     if (txt !== lastTxt) { $('statTxt').textContent = txt; lastTxt = txt; }
     $('hpBar').style.width = Math.max(0, player.hp) + '%';
     $('arBar').style.width = armor * 2 + '%';
-    $('ammo').textContent = W().n + ' · ' + (reloadT > 0 ? 'रीलोड…' : mag + ' / ' + reserve);
+    if (drive) $('ammo').textContent = VEH[drive.type].n + ' · ' + Math.round(Math.abs(drive.sp) * 3.6) + ' किमी/घं';
+    else $('ammo').textContent = W().n + ' · ' + (reloadT > 0 ? 'रीलोड…' : mag + ' / ' + reserve);
     $('zoneInfo').textContent = matchT < 25 ? 'ज़ोन सिकुड़ेगा: ' + Math.ceil(25 - matchT) + ' सेकंड' : 'ज़ोन सिकुड़ रहा है (' + Math.round(zoneR) + ' मी)';
   }
 
