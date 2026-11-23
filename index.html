@@ -50,7 +50,15 @@ body.touch #sbar { display:flex; }
 .sbtn.on { background:var(--accent); color:var(--accent-fg); border-color:#fff; }
 .abtn { position:absolute; right:24px; min-width:56px; height:38px; padding:0 12px; border-radius:19px; border:2px solid #fff; color:#1a1405; font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center; z-index:3; touch-action:none; cursor:pointer; }
 #vaultBtn { bottom:106px; background:rgba(255,200,61,.92); }
-body.driving #carBtn { bottom:40px; }
+body.driving #carBtn { bottom:176px; }
+body.driving #joy { display:none !important; }
+.dbtn { display:none; position:absolute; z-index:3; touch-action:none; border-radius:50%; border:2px solid #fff; color:#fff; font-weight:700; align-items:center; justify-content:center; text-align:center; }
+body.touch.driving .dbtn { display:flex; }
+#stL, #stR { bottom:40px; width:68px; height:68px; background:rgba(255,255,255,.22); font-size:1.5rem; }
+#stL { left:20px; } #stR { left:100px; }
+#gasBtn { right:22px; bottom:34px; width:78px; height:78px; background:rgba(56,211,159,.8); font-size:.85rem; }
+#brkBtn { right:112px; bottom:34px; width:62px; height:62px; background:rgba(255,74,61,.8); font-size:.75rem; }
+#hornBtn { right:30px; bottom:122px; width:46px; height:46px; background:rgba(255,200,61,.9); color:#1a1405; font-size:.6rem; }
 body.driving #fireBtn, body.driving #rldBtn, body.driving #swapBtn, body.driving #runBtn, body.driving #sbar, body.driving #cross, body.driving #pickBtn, body.driving #vaultBtn { display:none !important; }
 #carBtn { bottom:198px; background:rgba(120,190,255,.95); }
 #pickBtn { bottom:152px; background:rgba(120,220,140,.95); }
@@ -109,13 +117,15 @@ body.touch #runBtn { display:flex; }
   <div class="abtn" id="vaultBtn" hidden>कूदें</div>
   <div class="abtn" id="pickBtn" hidden>उठाएँ</div>
   <div class="abtn" id="carBtn" hidden>बैठें</div>
+  <div class="dbtn" id="stL">◀</div><div class="dbtn" id="stR">▶</div>
+  <div class="dbtn" id="gasBtn">तेज़<br>चलाएँ</div><div class="dbtn" id="brkBtn">ब्रेक /<br>पीछे</div><div class="dbtn" id="hornBtn">हॉर्न</div>
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
     <p id="ovText">30 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 18 · असली इंसान जैसा किरदार</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 19 · बेहतर गाड़ियाँ और चलाने के बटन</p>
   </div>
 </div>
 
@@ -126,8 +136,8 @@ body.touch #runBtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन दबाकर तेज़ दौड़िए, फिर दबाकर वापस चलिए · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: जोयस्टिक से चलाइए, टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
-    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
+    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन दबाकर तेज़ दौड़िए, फिर दबाकर वापस चलिए · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: बाएँ ◀ ▶ से मोड़िए, दाएँ हरा बटन तेज़, लाल ब्रेक या पीछे, पीला हॉर्न; टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
+    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · गाड़ी में G: हॉर्न · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
@@ -486,6 +496,7 @@ body.touch #runBtn { display:flex; }
       else if (name === 'win') [523, 659, 784, 1046].forEach(function (f, i) { setTimeout(function () { if (ac && !muted) tone(f, f, 0.3, 'triangle', 0.3); }, i * 150); });
       else if (name === 'lose') tone(320, 70, 0.9, 'sawtooth', 0.25);
       else if (name === 'start') tone(440, 880, 0.3, 'triangle', 0.25);
+      else if (name === 'horn') { tone(430, 430, 0.28, 'square', 0.16); tone(540, 540, 0.28, 'square', 0.12); }
       else if (name === 'engine') tone(60 + a * 7, 52 + a * 7, 0.15, 'sawtooth', 0.07);
       else if (name === 'pickup') tone(700, 1100, 0.09, 'triangle', 0.22);
     } catch (e) {}
@@ -683,36 +694,73 @@ body.touch #runBtn { display:flex; }
     car: { n: 'कार', max: 22, acc: 11, turn: 1.8, r: 1.3 },
     rick: { n: 'रिक्शा', max: 12, acc: 8, turn: 1.7, r: 1.1 }
   };
-  var vehicles = [], drive = null, carShown = '', engT = 0;
+  var vehicles = [], drive = null, carShown = '', engT = 0, drvL = false, drvR = false, drvGas = false, drvBrk = false, dHold = {};
+  function setDrv(id, v) { if (id === 'stL') drvL = v; else if (id === 'stR') drvR = v; else if (id === 'gasBtn') drvGas = v; else if (id === 'brkBtn') drvBrk = v; }
+  function clearDrv() { drvL = drvR = drvGas = drvBrk = false; dHold = {}; }
   var carCols = [0xc0392b, 0x2e86c1, 0x27ae60, 0xf1c40f, 0xecf0f1, 0x8e44ad];
   function vehMesh(type) {
-    var g = new THREE.Group();
+    var g = new THREE.Group(), wheels = [];
     function bx(w, h, d, c, x, y, z) { var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); g.add(m); return m; }
-    function wh(r, w, x, z) { var m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 12), mat(0x15181d)); m.rotation.z = Math.PI / 2; m.position.set(x, r, z); g.add(m); }
-    var col = pick(carCols);
-    if (type === 'bike') {
-      wh(0.33, 0.12, 0, -0.65); wh(0.33, 0.12, 0, 0.65);
-      bx(0.16, 0.22, 1.0, 0x2a2f38, 0, 0.55, 0); bx(0.26, 0.2, 0.42, col, 0, 0.8, -0.12);
-      bx(0.22, 0.08, 0.5, 0x15181d, 0, 0.8, 0.32); bx(0.7, 0.05, 0.06, 0x9aa5ae, 0, 1.08, -0.55); bx(0.06, 0.55, 0.06, 0x9aa5ae, 0, 0.72, -0.58);
-      bx(0.14, 0.12, 0.1, 0xffe27a, 0, 0.98, -0.68);
-    } else if (type === 'car') {
-      wh(0.38, 0.26, -0.95, -1.2); wh(0.38, 0.26, 0.95, -1.2); wh(0.38, 0.26, -0.95, 1.2); wh(0.38, 0.26, 0.95, 1.2);
-      bx(1.8, 0.6, 3.8, col, 0, 0.7, 0); bx(1.5, 0.55, 1.9, 0x9fd0e8, 0, 1.25, 0.25); bx(1.56, 0.08, 2.0, col, 0, 1.56, 0.25);
-      bx(0.4, 0.18, 0.08, 0xffe27a, -0.55, 0.8, -1.92); bx(0.4, 0.18, 0.08, 0xffe27a, 0.55, 0.8, -1.92);
-      bx(0.4, 0.18, 0.08, 0xd02b2b, -0.55, 0.8, 1.92); bx(0.4, 0.18, 0.08, 0xd02b2b, 0.55, 0.8, 1.92);
-    } else {
-      wh(0.3, 0.16, 0, -1.2); wh(0.3, 0.2, -0.7, 0.8); wh(0.3, 0.2, 0.7, 0.8);
-      bx(1.3, 0.55, 2.0, 0x2f8f4e, 0, 0.7, 0.35); bx(1.3, 0.5, 0.9, 0xf2c230, 0, 1.2, 0.8); bx(0.5, 0.65, 0.7, 0xf2c230, 0, 0.8, -0.95);
-      bx(1.45, 0.08, 2.0, 0x15181d, 0, 1.75, 0.35); bx(0.06, 0.55, 0.06, 0x15181d, -0.62, 1.48, -0.55); bx(0.06, 0.55, 0.06, 0x15181d, 0.62, 1.48, -0.55);
-      bx(0.14, 0.14, 0.1, 0xffe27a, 0, 0.95, -1.32);
+    function wh(r, w, x, z) {
+      var m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 14), mat(0x15181d)); m.rotation.z = Math.PI / 2; m.position.set(x, r, z); g.add(m);
+      var hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.55, r * 0.55, w + 0.02, 10), mat(0x9aa5ae)); m.add(hub);
+      var bar = new THREE.Mesh(new THREE.BoxGeometry(r * 1.5, w + 0.03, r * 0.22), mat(0xd7dde2)); m.add(bar);
+      wheels.push(m);
     }
+    var col = pick(carCols), dk = 0x1b1e23, glass = 0x24384a, chrome = 0xc9d1d8;
+    if (type === 'bike') {
+      wh(0.34, 0.13, 0, -0.68); wh(0.34, 0.15, 0, 0.7);
+      bx(0.05, 0.1, 0.5, col, 0, 0.72, -0.68);                  // आगे का मडगार्ड
+      bx(0.06, 0.62, 0.06, chrome, -0.1, 0.62, -0.66); bx(0.06, 0.62, 0.06, chrome, 0.1, 0.62, -0.66); // फ़ोर्क
+      bx(0.2, 0.2, 0.55, 0x2a2f38, 0, 0.55, 0.02);              // इंजन
+      bx(0.28, 0.22, 0.46, col, 0, 0.88, -0.2);                 // टंकी
+      bx(0.24, 0.07, 0.6, 0x15181d, 0, 0.82, 0.38);            // सीट
+      bx(0.2, 0.1, 0.3, col, 0, 0.88, 0.72);                    // पीछे का हिस्सा
+      bx(0.76, 0.045, 0.05, 0x20242b, 0, 1.12, -0.58);          // हैंडल
+      bx(0.09, 0.09, 0.09, 0x20242b, -0.4, 1.12, -0.58); bx(0.09, 0.09, 0.09, 0x20242b, 0.4, 1.12, -0.58);
+      bx(0.04, 0.12, 0.04, chrome, -0.38, 1.22, -0.6); bx(0.04, 0.12, 0.04, chrome, 0.38, 1.22, -0.6);
+      bx(0.17, 0.15, 0.1, 0xfff3b0, 0, 1.02, -0.78);            // हेडलाइट
+      bx(0.1, 0.05, 0.05, 0xd02b2b, 0, 0.9, 0.9);               // पीछे की लाइट
+      var ex = bx(0.08, 0.08, 0.6, 0x7b838b, 0.17, 0.35, 0.45); // साइलेंसर
+    } else if (type === 'car') {
+      wh(0.39, 0.26, -0.96, -1.25); wh(0.39, 0.26, 0.96, -1.25); wh(0.39, 0.26, -0.96, 1.25); wh(0.39, 0.26, 0.96, 1.25);
+      bx(1.84, 0.5, 4.0, col, 0, 0.7, 0);                       // निचला ढाँचा
+      bx(1.74, 0.16, 1.1, col, 0, 0.98, -1.35);                 // बोनट
+      bx(1.74, 0.2, 0.9, col, 0, 0.98, 1.45);                   // डिक्की
+      bx(1.58, 0.52, 1.95, glass, 0, 1.24, 0.15);              // शीशे
+      bx(1.64, 0.07, 2.05, col, 0, 1.53, 0.15);                // छत
+      bx(0.07, 0.52, 0.07, col, -0.8, 1.24, -0.78); bx(0.07, 0.52, 0.07, col, 0.8, 1.24, -0.78);
+      bx(0.07, 0.52, 0.07, col, -0.8, 1.24, 1.07); bx(0.07, 0.52, 0.07, col, 0.8, 1.24, 1.07);
+      bx(0.07, 0.5, 0.07, col, -0.8, 1.24, 0.15); bx(0.07, 0.5, 0.07, col, 0.8, 1.24, 0.15);
+      bx(1.9, 0.14, 0.2, dk, 0, 0.5, -2.02); bx(1.9, 0.14, 0.2, dk, 0, 0.5, 2.02);   // बंपर
+      bx(0.42, 0.18, 0.08, 0xfff3b0, -0.62, 0.86, -2.0); bx(0.42, 0.18, 0.08, 0xfff3b0, 0.62, 0.86, -2.0);
+      bx(0.42, 0.18, 0.08, 0xd02b2b, -0.62, 0.9, 2.0); bx(0.42, 0.18, 0.08, 0xd02b2b, 0.62, 0.9, 2.0);
+      bx(0.5, 0.12, 0.04, 0xeeeeee, 0, 0.62, -2.06); bx(0.5, 0.12, 0.04, 0xeeeeee, 0, 0.62, 2.06);   // नंबर प्लेट
+      bx(0.14, 0.1, 0.18, col, -0.98, 1.1, -0.7); bx(0.14, 0.1, 0.18, col, 0.98, 1.1, -0.7);          // शीशे वाले मिरर
+      bx(0.02, 0.4, 0.04, dk, -0.93, 0.8, 0.1); bx(0.02, 0.4, 0.04, dk, 0.93, 0.8, 0.1);              // दरवाज़े की लाइन
+    } else {
+      wh(0.31, 0.16, 0, -1.25); wh(0.31, 0.2, -0.72, 0.85); wh(0.31, 0.2, 0.72, 0.85);
+      bx(1.3, 0.4, 2.15, 0x2f8f4e, 0, 0.62, 0.35);              // हरा निचला हिस्सा
+      bx(1.3, 0.55, 1.0, 0xf2c230, 0, 1.1, 0.85);                // पीला पिछला केबिन
+      bx(0.62, 0.7, 0.8, 0xf2c230, 0, 0.82, -0.9);              // आगे की नाक
+      bx(0.5, 0.1, 0.6, 0x2f8f4e, 0, 0.5, -1.3);                // आगे का मडगार्ड
+      bx(1.5, 0.09, 2.2, 0x1b1e23, 0, 1.8, 0.3);                // काली छत
+      bx(0.06, 0.6, 0.06, 0x1b1e23, -0.64, 1.48, -0.7); bx(0.06, 0.6, 0.06, 0x1b1e23, 0.64, 1.48, -0.7);
+      bx(0.06, 0.6, 0.06, 0x1b1e23, -0.64, 1.48, 1.3); bx(0.06, 0.6, 0.06, 0x1b1e23, 0.64, 1.48, 1.3);
+      bx(0.5, 0.32, 0.04, 0x9fd0e8, 0, 1.45, -0.72);            // आगे का शीशा
+      bx(0.6, 0.35, 0.05, 0x2a2f38, 0, 1.2, -0.55);             // हैंडल का डिब्बा
+      bx(1.1, 0.12, 0.35, 0x15181d, 0, 0.97, 0.45);             // ड्राइवर सीट
+      bx(0.16, 0.14, 0.1, 0xfff3b0, 0, 0.98, -1.28);            // हेडलाइट
+      bx(0.1, 0.06, 0.06, 0xd02b2b, 0, 0.75, 1.42);
+    }
+    g.userData.wheels = wheels;
     return g;
   }
   function addVehicle(type, x, z, h) {
     var m = vehMesh(type); m.position.set(x, 0, z); m.rotation.y = h; scene.add(m);
     vehicles.push({ type: type, x: x, z: z, h: h, sp: 0, m: m });
   }
-  function driveUI(on) { document.body.classList.toggle('driving', !!on); }
+  function driveUI(on) { document.body.classList.toggle('driving', !!on); if (!on) clearDrv(); }
   function clearVehicles() { driveUI(false); for (var i = 0; i < vehicles.length; i++) scene.remove(vehicles[i].m); vehicles = []; drive = null; carShown = ''; $('carBtn').hidden = true; }
   function vehSpot(near) {
     for (var k = 0; k < 60; k++) {
@@ -742,7 +790,7 @@ body.touch #runBtn { display:flex; }
   function enterVehicle(v) {
     drive = v; driveUI(true); setScope(false); firing = false; toggleBag(false); vault = null; vaultY = 0; setRun(false);
     player.x = v.x; player.z = v.z; player.yaw = v.h; player.pitch = -0.18; v.sp = 0;
-    toast(VEH[v.type].n + ': जोयस्टिक ऊपर = आगे, दाएँ/बाएँ = मोड़'); sfx('pickup');
+    toast(VEH[v.type].n + ': ◀ ▶ से मोड़िए, हरा बटन = तेज़, लाल = ब्रेक'); sfx('pickup');
   }
   function exitVehicle() {
     if (!drive) return;
@@ -771,6 +819,10 @@ body.touch #runBtn { display:flex; }
     if (Math.abs(player.x - tx) + Math.abs(player.z - tz) > 0.01) { if (Math.abs(v.sp) > 6) { sfx('hurt'); toast('टक्कर!'); } v.sp *= 0.3; }
     player.yaw = v.h; v.x = player.x; v.z = player.z;
     v.m.position.set(v.x, 0, v.z); v.m.rotation.y = v.h;
+    var wl = v.m.userData.wheels || [], spin = v.sp * dt / 0.36;
+    for (var wi = 0; wi < wl.length; wi++) wl[wi].rotation.x -= spin;
+    v.lean = (v.lean || 0) + ((v.type === 'bike' ? -steer * Math.min(1, Math.abs(v.sp) / 8) * 0.35 : 0) - (v.lean || 0)) * Math.min(1, dt * 6);
+    v.m.rotation.z = v.lean;
     if (Math.abs(v.sp) > 6) {
       for (var i = 0; i < bots.length; i++) {
         var b = bots[i]; if (!b.alive) continue;
@@ -925,7 +977,15 @@ body.touch #runBtn { display:flex; }
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw), cp = Math.cos(player.pitch), sp = Math.sin(player.pitch);
     camera.rotation.set(player.pitch, player.yaw, 0);
     if (drive) {
-      gun.visible = false; pm.visible = false;
+      gun.visible = false;
+      var seated = drive.type !== 'car';
+      pm.visible = seated && player.alive;
+      if (seated) {
+        var off = drive.type === 'bike' ? 0.32 : -0.05, hy = drive.type === 'bike' ? -0.12 : -0.04;
+        pm.position.set(player.x + sy * off, hy, player.z + cy * off); pm.rotation.y = player.yaw + Math.PI;
+        prig.legL.rotation.x = -1.35; prig.legR.rotation.x = -1.35; prig.kneeL.rotation.x = 1.45; prig.kneeR.rotation.x = 1.45;
+        prig.body.position.y = 0; prig.body.rotation.y = 0;
+      }
       cpiv.set(player.x, 1.8, player.z);
       cdir.set(sy * cp, -sp, cy * cp).normalize();
       var dd = camera.aspect < 1 ? 8 : 6.2;
@@ -1045,6 +1105,7 @@ body.touch #runBtn { display:flex; }
     if (e.code === 'KeyZ') toggleScope();
     if (e.code === 'KeyE') { if (!drive && doPick()) { } else if (!vehicleAct()) doVault(); }
     if (e.code === 'KeyB') toggleBag();
+    if (e.code === 'KeyG' && drive) sfx('horn');
     if (e.code === 'KeyH') useMed();
     if (e.code === 'KeyQ') nextWeapon();
     if (e.code === 'Digit1') equip(0);
@@ -1096,6 +1157,7 @@ body.touch #runBtn { display:flex; }
       else if (tg.id === 'vaultBtn') { doVault(); }
       else if (tg.id === 'pickBtn') { doPick(); }
       else if (tg.id === 'carBtn') { vehicleAct(); }
+      else if (tg.classList && tg.classList.contains('dbtn')) { dHold[t.identifier] = tg.id; setDrv(tg.id, true); if (tg.id === 'hornBtn') sfx('horn'); }
       else if (tg.id === 'bagBtn') { toggleBag(); }
       else if (tg.id === 'swapBtn') { nextWeapon(); }
       else if (tg.id === 'runBtn') { setRun(); }
@@ -1113,6 +1175,7 @@ body.touch #runBtn { display:flex; }
   function touchEnd(e) {
     for (var i = 0; i < e.changedTouches.length; i++) {
       var t = e.changedTouches[i];
+      if (dHold[t.identifier]) { setDrv(dHold[t.identifier], false); delete dHold[t.identifier]; continue; }
       if (t.identifier === joyId) clearJoy();
       else if (t.identifier === lookId) lookId = null;
       else if (t.target && t.target.id === 'fireBtn') firing = false;
@@ -1128,6 +1191,11 @@ body.touch #runBtn { display:flex; }
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
     var str = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + joyX;
+    if (drive) {
+      fwd = (drvGas ? 1 : 0) - (drvBrk ? 1 : 0) + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+      str = (drvR ? 1 : 0) - (drvL ? 1 : 0) + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+      fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
+    }
     var ml = Math.sqrt(fwd * fwd + str * str); if (ml > 1) { fwd /= ml; str /= ml; }
     var sp = (running || keys.ShiftLeft || keys.ShiftRight) ? 8.5 : 4.5;
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
