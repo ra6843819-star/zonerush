@@ -125,7 +125,7 @@ body.touch #runBtn { display:flex; }
     <p id="ovText">30 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 19 · बेहतर गाड़ियाँ और चलाने के बटन</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 20 · बहुत बड़ा नक़्शा, बड़ी इमारतें</p>
   </div>
 </div>
 
@@ -143,7 +143,7 @@ body.touch #runBtn { display:flex; }
     $('startBtn').hidden = true; return;
   }
 
-  var WORLD_R = 153, ZONE0 = 148;
+  var WORLD_R = 232, ZONE0 = 226;
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec9e8);
   scene.fog = new THREE.Fog(0x9ec9e8, 45, 170);
@@ -161,7 +161,7 @@ body.touch #runBtn { display:flex; }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6c8a5a, 0.85));
   var sun = new THREE.DirectionalLight(0xfff2d6, 0.6); sun.position.set(40, 80, 20); scene.add(sun);
-  var ground = new THREE.Mesh(new THREE.PlaneGeometry(560, 560), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
   ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
   var obstacles = [], obsMeshes = [];
@@ -188,8 +188,42 @@ body.touch #runBtn { display:flex; }
   var roofCols = [0x9c4a32, 0x6b4a3a, 0x4f5d6b, 0x8a3b30];
   var frameMat = new THREE.MeshBasicMaterial({ color: 0xffc83d });
 
+  /* स्थिर चीज़ों को एक रंग/सामग्री के हिसाब से जोड़ना: फ़ोन पर ड्रॉ-कॉल कम होते हैं */
+  function mergeStatic(list) {
+    var groups = {}, outs = [], i, k;
+    try {
+      for (i = 0; i < list.length; i++) {
+        var m = list[i], inObs = obsMeshes.indexOf(m) >= 0;
+        var key = m.material.type + m.material.color.getHex() + (inObs ? 'o' : 'n');
+        (groups[key] || (groups[key] = { mat: m.material, obs: inObs, list: [] })).list.push(m);
+      }
+      for (k in groups) {
+        var gr = groups[k], pos = [], nor = [];
+        for (i = 0; i < gr.list.length; i++) {
+          var mm = gr.list[i]; mm.updateMatrix();
+          var geo = mm.geometry.clone(); geo.applyMatrix4(mm.matrix);
+          var ng = geo.index ? geo.toNonIndexed() : geo;
+          var pa = ng.attributes.position.array, na = ng.attributes.normal.array, q;
+          for (q = 0; q < pa.length; q++) { pos.push(pa[q]); nor.push(na[q]); }
+        }
+        var big = new THREE.BufferGeometry();
+        big.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+        big.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(nor), 3));
+        big.computeBoundingSphere();
+        outs.push({ mesh: new THREE.Mesh(big, gr.mat), gr: gr });
+      }
+    } catch (e) { for (i = 0; i < list.length; i++) scene.add(list[i]); return; }
+    for (i = 0; i < outs.length; i++) {
+      scene.add(outs[i].mesh);
+      if (outs[i].gr.obs) {
+        for (var j = 0; j < outs[i].gr.list.length; j++) { var ix = obsMeshes.indexOf(outs[i].gr.list[j]); if (ix >= 0) obsMeshes.splice(ix, 1); }
+        obsMeshes.push(outs[i].mesh);
+      }
+    }
+  }
   /* घर: चार दीवारें (एक में दरवाज़ा, बाक़ी में खिड़की), फ़र्श, छत और अंदर मेज़ */
   function addHouse(cx, cz, w, d, doorSide, wcol, rcol) {
+    var startIdx = scene.children.length;
     var H = 3.2, t = 0.4, x0 = cx - w / 2, x1 = cx + w / 2, z0 = cz - d / 2, z1 = cz + d / 2;
     var wm = new THREE.MeshLambertMaterial({ color: wcol });
     function run(axis, fixed, a, b, ops) {
@@ -222,7 +256,14 @@ body.touch #runBtn { display:flex; }
       box(X ? bar : th, 1.2, X ? th : bar, X ? c + wd / 2 + bar / 2 : fixed, 1.6, X ? fixed : c + wd / 2 + bar / 2);
     }
     function wallOps(side, mid, len) {
-      return side === doorSide ? [{ c: mid + rnd(-len / 6, len / 6), w: 2.2, door: true }] : [{ c: mid, w: 1.6 }];
+      var ops = [], dc = null, n = Math.max(1, Math.floor(len / 5)), i2;
+      if (side === doorSide) { dc = mid + rnd(-len / 6, len / 6); ops.push({ c: dc, w: 2.2, door: true }); }
+      for (i2 = 0; i2 < n; i2++) {
+        var c2 = mid - len / 2 + (i2 + 0.5) * len / n;
+        if (dc !== null && Math.abs(c2 - dc) < 3.2) continue;
+        ops.push({ c: c2, w: 1.6 });
+      }
+      return ops;
     }
     run('x', z0, x0 - t / 2, x1 + t / 2, wallOps(0, cx, w));
     run('x', z1, x0 - t / 2, x1 + t / 2, wallOps(1, cx, w));
@@ -232,29 +273,34 @@ body.touch #runBtn { display:flex; }
     fl.position.set(cx, 0.02, cz); scene.add(fl);
     var ce = new THREE.Mesh(new THREE.BoxGeometry(w + t, 0.15, d + t), new THREE.MeshLambertMaterial({ color: 0x6b5a48 }));
     ce.position.set(cx, H + 0.075, cz); scene.add(ce);
-    var rg = new THREE.ConeGeometry((w / 2 + 0.6) * 1.4142, 1.9, 4); rg.rotateY(Math.PI / 4);
+    var roofH = 1.9 + Math.max(0, w - 10) * 0.12;
+    var rg = new THREE.ConeGeometry((w / 2 + 0.6) * 1.4142, roofH, 4); rg.rotateY(Math.PI / 4);
     var roof = new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ color: rcol }));
-    roof.scale.z = (d / 2 + 0.6) / (w / 2 + 0.6); roof.position.set(cx, H + 0.95, cz); scene.add(roof); obsMeshes.push(roof);
-    addBox(cx + rnd(-w / 6, w / 6), cz + rnd(-d / 6, d / 6), 1.4, 0.9, 0.9, 0x7a5230);
+    roof.scale.z = (d / 2 + 0.6) / (w / 2 + 0.6); roof.position.set(cx, H + roofH / 2, cz); scene.add(roof); obsMeshes.push(roof);
+    var nc = 2 + Math.floor(w * d / 90);
+    for (var ci = 0; ci < nc; ci++) addBox(rnd(x0 + 2.8, x1 - 2.8), rnd(z0 + 2.8, z1 - 2.8), rnd(1, 1.8), rnd(0.8, 1.2), rnd(0.8, 1.2), 0x7a5230);
     houses.push({ x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2 });
+    var made = scene.children.splice(startIdx, scene.children.length - startIdx);
+    mergeStatic(made);
   }
   var placed = 0, guard = 0;
-  while (placed < 30 && guard++ < 2000) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 126;
-    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(8, 12), bd = rnd(7, 10);
+  while (placed < 48 && guard++ < 3000) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 196;
+    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(13, 20), bd = rnd(11, 16);
     if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
     addHouse(bx, bz, bw, bd, Math.floor(Math.random() * 4), wallCols[Math.floor(Math.random() * wallCols.length)], roofCols[Math.floor(Math.random() * roofCols.length)]); placed++;
   }
   placed = 0; guard = 0;
-  while (placed < 40 && guard++ < 800) {
-    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 142, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
+  while (placed < 60 && guard++ < 1200) {
+    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 215, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
     if (blocked(cx, cz, 3)) continue;
     addBox(cx, cz, 2, 1.4, 2, 0x8a5a2b); placed++;
   }
   var trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2b }), leafMat = new THREE.MeshLambertMaterial({ color: 0x2f7a3c });
   placed = 0; guard = 0;
-  while (placed < 90 && guard++ < 1000) {
-    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 148, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
+  var treeStart = scene.children.length;
+  while (placed < 150 && guard++ < 1500) {
+    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 224, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
     if (blocked(tx, tz, 2)) continue;
     var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 6), trunkMat);
     trunk.position.set(tx, 1.5, tz); scene.add(trunk); obsMeshes.push(trunk);
@@ -262,6 +308,11 @@ body.touch #runBtn { display:flex; }
     var leaf = new THREE.Mesh(new THREE.ConeGeometry(2, 4.5, 7), leafMat);
     leaf.position.set(tx, 5, tz); scene.add(leaf); placed++;
   }
+  (function () {
+    var tl = scene.children.splice(treeStart, scene.children.length - treeStart), cells = {}, i, k;
+    for (i = 0; i < tl.length; i++) { k = Math.floor((tl[i].position.x + 300) / 60) + '_' + Math.floor((tl[i].position.z + 300) / 60); (cells[k] || (cells[k] = [])).push(tl[i]); }
+    for (k in cells) mergeStatic(cells[k]);
+  })();
 
   var zoneMesh = new THREE.Mesh(
     new THREE.CylinderGeometry(1, 1, 70, 64, 1, true),
@@ -306,7 +357,7 @@ body.touch #runBtn { display:flex; }
   }
 
   var player = { x: 0, z: 60, hp: 100, yaw: 0, pitch: 0, alive: true };
-  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 148, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
+  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 226, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
   var rc = new THREE.Raycaster();
   var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
@@ -598,18 +649,18 @@ body.touch #runBtn { display:flex; }
   }
   function scatterLoot() {
     clearLoot();
-    var guaranteed = ['bag', 'bag', 'bag', 'rifle', 'rifle', 'sniper', 'armor', 'smg'];
+    var guaranteed = ['bag', 'bag', 'bag', 'bag', 'bag', 'rifle', 'rifle', 'rifle', 'rifle', 'sniper', 'sniper', 'sniper', 'armor', 'armor', 'armor', 'smg', 'smg', 'smg', 'smg'];
     var hs = houses.slice().sort(function () { return Math.random() - 0.5; }), i, j, s;
     for (i = 0; i < hs.length; i++) {
-      var n = 2 + Math.floor(Math.random() * 2);
+      var n = 3 + Math.floor(Math.random() * 3);
       for (j = 0; j < n; j++) {
         s = inHouseSpot(hs[i]); if (!s) continue;
         var t = (j === 0 && guaranteed.length) ? guaranteed.shift() : pickLootType();
         spawnLoot(t, s.x, s.z);
       }
     }
-    for (i = 0; i < 40; i++) {
-      s = freeSpot(6, 145);
+    for (i = 0; i < 55; i++) {
+      s = freeSpot(6, 222);
       if (blocked(s.x, s.z, 1.2)) continue;
       spawnLoot(pickLootType(), s.x, s.z);
     }
@@ -630,6 +681,7 @@ body.touch #runBtn { display:flex; }
       var it = items[i]; it.t += dt;
       it.g.userData.mk.position.y = 1.15 + Math.sin(it.t * 3) * 0.1; it.g.rotation.y += dt * 1.5;
       var dx = it.x - player.x, dz = it.z - player.z, d2 = dx * dx + dz * dz;
+      it.g.visible = d2 < 16900;
       if (d2 > 2500) continue;
       if (WEAPONS[it.type]) { if (!drive && d2 < bd) { bd = d2; best = it; } }
       else if (d2 < 1.5 * 1.5 && collect(it)) removeLoot(it);
@@ -766,8 +818,8 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 60; k++) {
       var x, z;
       if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
-      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 146); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
-      if (Math.hypot(x, z) > 150 || blocked(x, z, 3)) continue;
+      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 222); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 226 || blocked(x, z, 3)) continue;
       var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
       if (ok) return { x: x, z: z };
     }
@@ -775,7 +827,7 @@ body.touch #runBtn { display:flex; }
   }
   function spawnVehicles() {
     clearVehicles();
-    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
+    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
     s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
     for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
   }
@@ -832,6 +884,7 @@ body.touch #runBtn { display:flex; }
     }
     engT -= dt; if (engT <= 0) { engT = 0.16; sfx('engine', Math.abs(v.sp)); }
   }
+  function updateVehVis() { for (var i = 0; i < vehicles.length; i++) { var v = vehicles[i]; v.m.visible = (v === drive) || Math.hypot(v.x - player.x, v.z - player.z) < 140; } }
   function updateCarUI() {
     var label = '';
     if (state === 'play' && player.alive && !vault) {
@@ -865,7 +918,7 @@ body.touch #runBtn { display:flex; }
     return rc.intersectObjects(obsMeshes, false).length === 0;
   }
   function findTarget(b) {
-    var best = null, bd = 38;
+    var best = null, bd = 50;
     if (player.alive) { var dp = Math.hypot(player.x - b.x, player.z - b.z); if (dp < bd) { bd = dp; best = player; } }
     for (var i = 0; i < bots.length; i++) {
       var o = bots[i]; if (o === b || !o.alive) continue;
@@ -919,7 +972,7 @@ body.touch #runBtn { display:flex; }
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
     var dpl = Math.hypot(b.x - player.x, b.z - player.z), dv = dpl < 32;
     if (dv !== b.dv) { b.dv = dv; b.rig.setDetail(dv); }
-    b.g.visible = dpl < 175;
+    b.g.visible = dpl < 150;
     var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
 
@@ -1075,9 +1128,9 @@ body.touch #runBtn { display:flex; }
   function startMatch() {
     for (var i = 0; i < bots.length; i++) scene.remove(bots[i].g);
     bots = []; clearBullets();
-    var sp = freeSpot(95, 140);
+    var sp = freeSpot(150, 215);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 29; k++) { var s = freeSpot(8, 146, player, 40); bots.push(makeBot(s.x, s.z)); }
+    for (var k = 0; k < 29; k++) { var s = freeSpot(8, 222, player, 60); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
     toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
@@ -1186,7 +1239,7 @@ body.touch #runBtn { display:flex; }
   var lastTxt = '';
   function update(dt) {
     matchT += dt;
-    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 1.3);
+    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 1.9);
     zoneMesh.scale.set(zoneR, 1, zoneR);
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
@@ -1206,7 +1259,7 @@ body.touch #runBtn { display:flex; }
       player.z += (-cy * fwd - sy * str) * sp * dt;
       resolve(player, 0.45);
     }
-    placeCamera(ml > 0.1 || !!vault); updateVaultUI(); updateCarUI();
+    placeCamera(ml > 0.1 || !!vault); updateVaultUI(); updateCarUI(); updateVehVis();
     var tf = scoped ? 24 : 75;
     if (Math.abs(camera.fov - tf) > 0.1) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 14); camera.updateProjectionMatrix(); }
     if (ml > 0.1 && !drive) { stepT -= dt * sp / 6; if (stepT <= 0) { stepT = 0.4; sfx('step'); } }
