@@ -84,7 +84,7 @@ body.touch .sbtn { display:flex; }
     <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 8 · इंसान जैसे किरदार</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 9 · घर</p>
   </div>
 </div>
 
@@ -131,20 +131,68 @@ body.touch .sbtn { display:flex; }
     obsMeshes.push(m);
   }
   function rnd(a, b) { return a + Math.random() * (b - a); }
+  var houses = [];
   function blocked(x, z, pad) {
     for (var i = 0; i < obstacles.length; i++) {
       var o = obstacles[i];
       if (x > o.x0 - pad && x < o.x1 + pad && z > o.z0 - pad && z < o.z1 + pad) return true;
     }
+    for (var j = 0; j < houses.length; j++) {
+      var h = houses[j];
+      if (x > h.x0 - pad && x < h.x1 + pad && z > h.z0 - pad && z < h.z1 + pad) return true;
+    }
     return false;
   }
-  var wallCols = [0xb8a58a, 0xa7b3bd, 0xc9b6a0, 0x8e9aa6, 0xc08f7a];
+  var wallCols = [0xe3d5b8, 0xc9d3dc, 0xe8c9a8, 0xd9e0c8, 0xe0b8a0];
+  var roofCols = [0x9c4a32, 0x6b4a3a, 0x4f5d6b, 0x8a3b30];
+
+  /* घर: चार दीवारें (एक में दरवाज़ा, बाक़ी में खिड़की), फ़र्श, छत और अंदर मेज़ */
+  function addHouse(cx, cz, w, d, doorSide, wcol, rcol) {
+    var H = 3.2, t = 0.4, x0 = cx - w / 2, x1 = cx + w / 2, z0 = cz - d / 2, z1 = cz + d / 2;
+    var wm = new THREE.MeshLambertMaterial({ color: wcol });
+    function run(axis, fixed, a, b, ops) {
+      ops.sort(function (p, q) { return p.c - q.c; });
+      var cur = a;
+      function seg(s, e, y0, y1, solid) {
+        var len = e - s, h = y1 - y0; if (len < 0.02 || h < 0.02) return;
+        var mid = (s + e) / 2, sx = axis === 'x' ? len : t, sz = axis === 'x' ? t : len;
+        var px = axis === 'x' ? mid : fixed, pz = axis === 'x' ? fixed : mid;
+        var m = new THREE.Mesh(new THREE.BoxGeometry(sx, h, sz), wm);
+        m.position.set(px, y0 + h / 2, pz); scene.add(m); obsMeshes.push(m);
+        if (solid) obstacles.push({ x0: px - sx / 2, x1: px + sx / 2, z0: pz - sz / 2, z1: pz + sz / 2 });
+      }
+      for (var i = 0; i < ops.length; i++) {
+        var o = ops[i], s = o.c - o.w / 2, e = o.c + o.w / 2;
+        seg(cur, s, 0, H, true);
+        if (o.door) seg(s, e, 2.4, H, false);
+        else { seg(s, e, 0, 1.0, true); seg(s, e, 2.2, H, false); }
+        cur = e;
+      }
+      seg(cur, b, 0, H, true);
+    }
+    function wallOps(side, mid, len) {
+      return side === doorSide ? [{ c: mid + rnd(-len / 6, len / 6), w: 2.2, door: true }] : [{ c: mid, w: 1.6 }];
+    }
+    run('x', z0, x0 - t / 2, x1 + t / 2, wallOps(0, cx, w));
+    run('x', z1, x0 - t / 2, x1 + t / 2, wallOps(1, cx, w));
+    run('z', x0, z0 + t / 2, z1 - t / 2, wallOps(2, cz, d));
+    run('z', x1, z0 + t / 2, z1 - t / 2, wallOps(3, cz, d));
+    var fl = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), new THREE.MeshLambertMaterial({ color: 0x7a6048 }));
+    fl.position.set(cx, 0.02, cz); scene.add(fl);
+    var ce = new THREE.Mesh(new THREE.BoxGeometry(w + t, 0.15, d + t), new THREE.MeshLambertMaterial({ color: 0x6b5a48 }));
+    ce.position.set(cx, H + 0.075, cz); scene.add(ce);
+    var rg = new THREE.ConeGeometry((w / 2 + 0.6) * 1.4142, 1.9, 4); rg.rotateY(Math.PI / 4);
+    var roof = new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ color: rcol }));
+    roof.scale.z = (d / 2 + 0.6) / (w / 2 + 0.6); roof.position.set(cx, H + 0.95, cz); scene.add(roof); obsMeshes.push(roof);
+    addBox(cx + rnd(-w / 6, w / 6), cz + rnd(-d / 6, d / 6), 1.4, 0.9, 0.9, 0x7a5230);
+    houses.push({ x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2 });
+  }
   var placed = 0, guard = 0;
-  while (placed < 20 && guard++ < 400) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 82;
-    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(6, 13), bd = rnd(6, 13);
-    if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 3)) continue;
-    addBox(bx, bz, bw, rnd(3, 6), bd, wallCols[Math.floor(Math.random() * wallCols.length)]); placed++;
+  while (placed < 14 && guard++ < 600) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 78;
+    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(8, 12), bd = rnd(7, 10);
+    if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
+    addHouse(bx, bz, bw, bd, Math.floor(Math.random() * 4), wallCols[Math.floor(Math.random() * wallCols.length)], roofCols[Math.floor(Math.random() * roofCols.length)]); placed++;
   }
   placed = 0; guard = 0;
   while (placed < 26 && guard++ < 400) {
@@ -405,8 +453,15 @@ body.touch .sbtn { display:flex; }
       var ex = b.tx - b.x, ez = b.tz - b.z, ed = Math.sqrt(ex * ex + ez * ez) || 1;
       mx = ex / ed; mz = ez / ed; b.face = Math.atan2(mx, mz);
     }
+    if (b.detT > 0) { b.detT -= dt; var dx2 = -mz * b.det, dz2 = mx * b.det; mx += dx2 * 1.4; mz += dz2 * 1.4; }
     var ml = Math.sqrt(mx * mx + mz * mz); if (ml > 1) { mx /= ml; mz /= ml; }
+    var ox = b.x, oz = b.z;
     b.x += mx * speed * dt; b.z += mz * speed * dt; resolve(b, 0.5);
+    var want = Math.min(1, ml) * speed * dt, got = Math.sqrt((b.x - ox) * (b.x - ox) + (b.z - oz) * (b.z - oz));
+    if (want > 0.001 && got < want * 0.4) {
+      b.stuckT = (b.stuckT || 0) + dt;
+      if (b.stuckT > 0.35) { b.stuckT = 0; b.det = Math.random() < 0.5 ? -1 : 1; b.detT = 1.4; }
+    } else b.stuckT = 0;
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
     var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
