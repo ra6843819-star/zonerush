@@ -48,6 +48,7 @@ body.touch .sbtn { display:flex; }
 #camBtn { top:56px; }
 #muteBtn { top:116px; }
 #scopeBtn { top:176px; }
+#vaultBtn { position:absolute; right:10px; top:236px; min-width:64px; height:64px; padding:0 12px; border-radius:32px; background:rgba(255,200,61,.92); border:2px solid #fff; color:#1a1405; font-weight:700; font-size:.95rem; display:flex; align-items:center; justify-content:center; z-index:3; touch-action:none; cursor:pointer; }
 #scopeOv { inset:0; background:radial-gradient(circle at 50% 50%, transparent 0, transparent 30vmin, #000 30.4vmin); }
 #scopeOv::before, #scopeOv::after { content:""; position:absolute; background:rgba(0,0,0,.85); }
 #scopeOv::before { left:0; right:0; top:50%; height:2px; margin-top:-1px; }
@@ -79,12 +80,13 @@ body.touch .sbtn { display:flex; }
   <div class="ctl" id="fireBtn">फ़ायर</div>
   <div class="sbtn" id="camBtn">कैमरा</div>
   <div class="sbtn" id="muteBtn">ध्वनि</div>
-  <div class="sbtn" id="scopeBtn">स्कोप</div>  <div id="overlay">
+  <div class="sbtn" id="scopeBtn">स्कोप</div>
+  <div id="vaultBtn" hidden>कूदें</div>  <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
     <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 9 · घर</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 10 · खिड़की से कूदना</p>
   </div>
 </div>
 
@@ -95,8 +97,8 @@ body.touch .sbtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · स्क्रीन पर उँगली घुमाना: देखना · फ़ायर और रीलोड बटन दाएँ तरफ़ · ऊपर दाएँ गोल बटन: कैमरा, आवाज़ और स्कोप।'
-    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift: दौड़ना · V: कैमरा बदलना · M: आवाज़ बंद/चालू · दायाँ क्लिक या Z: स्कोप।';
+    ? 'बायाँ गोला: चलना · स्क्रीन पर उँगली घुमाना: देखना · फ़ायर और रीलोड बटन दाएँ तरफ़ · ऊपर दाएँ गोल बटन: कैमरा, आवाज़ और स्कोप · पीले फ़्रेम वाली खिड़की के पास पीला "कूदें" बटन।'
+    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift: दौड़ना · V: कैमरा बदलना · M: आवाज़ बंद/चालू · दायाँ क्लिक या Z: स्कोप · E: पीली खिड़की से कूदना।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
@@ -131,7 +133,7 @@ body.touch .sbtn { display:flex; }
     obsMeshes.push(m);
   }
   function rnd(a, b) { return a + Math.random() * (b - a); }
-  var houses = [];
+  var houses = [], windows = [];
   function blocked(x, z, pad) {
     for (var i = 0; i < obstacles.length; i++) {
       var o = obstacles[i];
@@ -145,6 +147,7 @@ body.touch .sbtn { display:flex; }
   }
   var wallCols = [0xe3d5b8, 0xc9d3dc, 0xe8c9a8, 0xd9e0c8, 0xe0b8a0];
   var roofCols = [0x9c4a32, 0x6b4a3a, 0x4f5d6b, 0x8a3b30];
+  var frameMat = new THREE.MeshBasicMaterial({ color: 0xffc83d });
 
   /* घर: चार दीवारें (एक में दरवाज़ा, बाक़ी में खिड़की), फ़र्श, छत और अंदर मेज़ */
   function addHouse(cx, cz, w, d, doorSide, wcol, rcol) {
@@ -165,10 +168,19 @@ body.touch .sbtn { display:flex; }
         var o = ops[i], s = o.c - o.w / 2, e = o.c + o.w / 2;
         seg(cur, s, 0, H, true);
         if (o.door) seg(s, e, 2.4, H, false);
-        else { seg(s, e, 0, 1.0, true); seg(s, e, 2.2, H, false); }
+        else { seg(s, e, 0, 1.0, true); seg(s, e, 2.2, H, false); windows.push({ axis: axis, fixed: fixed, c: o.c }); frame(axis, fixed, o.c, o.w); }
         cur = e;
       }
       seg(cur, b, 0, H, true);
+    }
+    /* खिड़की के चारों तरफ़ पीला फ़्रेम: यह कूदने की जगह का निशान है */
+    function frame(axis, fixed, c, wd) {
+      var th = t + 0.1, bar = 0.09, X = axis === 'x';
+      function box(sx, sy, sz, px, py, pz) { var m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), frameMat); m.position.set(px, py, pz); scene.add(m); }
+      box(X ? wd + 0.2 : th, bar, X ? th : wd + 0.2, X ? c : fixed, 1.0 + bar / 2, X ? fixed : c);
+      box(X ? wd + 0.2 : th, bar, X ? th : wd + 0.2, X ? c : fixed, 2.2 - bar / 2, X ? fixed : c);
+      box(X ? bar : th, 1.2, X ? th : bar, X ? c - wd / 2 - bar / 2 : fixed, 1.6, X ? fixed : c - wd / 2 - bar / 2);
+      box(X ? bar : th, 1.2, X ? th : bar, X ? c + wd / 2 + bar / 2 : fixed, 1.6, X ? fixed : c + wd / 2 + bar / 2);
     }
     function wallOps(side, mid, len) {
       return side === doorSide ? [{ c: mid + rnd(-len / 6, len / 6), w: 2.2, door: true }] : [{ c: mid, w: 1.6 }];
@@ -522,10 +534,10 @@ body.touch .sbtn { display:flex; }
     var fp = !tpp || scoped;
     gun.visible = fp && !scoped;
     pm.visible = !fp && player.alive;
-    pm.position.set(player.x, 0, player.z); poseHuman(prig, matchT * 9, moving);
+    pm.position.set(player.x, vaultY * 0.9, player.z); poseHuman(prig, matchT * 9, moving);
     pm.rotation.y = player.yaw + Math.PI;
-    if (fp) { camera.position.set(player.x, 1.65, player.z); return; }
-    cpiv.set(player.x + cy * 0.6, 1.7, player.z - sy * 0.6);
+    if (fp) { camera.position.set(player.x, 1.65 + vaultY, player.z); return; }
+    cpiv.set(player.x + cy * 0.6, 1.7 + vaultY, player.z - sy * 0.6);
     cdir.set(sy * cp, -sp, cy * cp).normalize();
     var dist = camera.aspect < 1 ? 5.4 : 3.6;
     rc.set(cpiv, cdir); rc.far = dist;
@@ -545,6 +557,42 @@ body.touch .sbtn { display:flex; }
     if (!v) { camera.fov = 75; camera.updateProjectionMatrix(); }
   }
   function toggleScope() { if (state !== 'play') return; setScope(!scoped); sfx('reload'); }
+  /* खिड़की से कूदना: खिड़की के पास आने पर "कूदें" बटन दिखता है, दबाने पर आप दीवार के पार पहुँच जाते हैं */
+  var vault = null, vaultY = 0, vaultShown = false;
+  function nearWindow() {
+    var best = null, bd = 1.9;
+    for (var i = 0; i < windows.length; i++) {
+      var w = windows[i], wx = w.axis === 'x' ? w.c : w.fixed, wz = w.axis === 'x' ? w.fixed : w.c;
+      var d = Math.sqrt((player.x - wx) * (player.x - wx) + (player.z - wz) * (player.z - wz));
+      if (d < bd) { bd = d; best = { wx: wx, wz: wz, axis: w.axis, fixed: w.fixed }; }
+    }
+    return best;
+  }
+  function doVault() {
+    if (state !== 'play' || vault || !player.alive) return;
+    var w = nearWindow(); if (!w) return;
+    if (scoped) setScope(false);
+    var tx, tz;
+    if (w.axis === 'x') { var s1 = player.z >= w.fixed ? 1 : -1; tx = w.wx; tz = w.fixed - s1 * 1.4; }
+    else { var s2 = player.x >= w.fixed ? 1 : -1; tx = w.fixed - s2 * 1.4; tz = w.wz; }
+    vault = { t: 0, sx: player.x, sz: player.z, wx: w.wx, wz: w.wz, tx: tx, tz: tz };
+    sfx('reload');
+  }
+  function stepVault(dt) {
+    vault.t += dt / 0.6;
+    var t = Math.min(1, vault.t), ax, az, bx, bz, u;
+    if (t < 0.5) { ax = vault.sx; az = vault.sz; bx = vault.wx; bz = vault.wz; u = t / 0.5; }
+    else { ax = vault.wx; az = vault.wz; bx = vault.tx; bz = vault.tz; u = (t - 0.5) / 0.5; }
+    player.x = ax + (bx - ax) * u; player.z = az + (bz - az) * u;
+    vaultY = Math.sin(Math.PI * t) * 0.45;
+    if (vault.t >= 1) { vault = null; vaultY = 0; resolve(player, 0.45); sfx('step'); }
+  }
+  function updateVaultUI() {
+    var show = state === 'play' && !vault && player.alive && !!nearWindow();
+    if (show !== vaultShown) { vaultShown = show; $('vaultBtn').hidden = !show; }
+  }
+  if (!isTouch) $('vaultBtn').textContent = 'कूदें (E)';
+  $('vaultBtn').addEventListener('mousedown', function (e) { e.stopPropagation(); doVault(); });
   var bass = [110, 110, 130.8, 98, 110, 146.8, 130.8, 98];
   setInterval(function () {
     if (state !== 'play' || !ac || muted) return;
@@ -563,12 +611,12 @@ body.touch .sbtn { display:flex; }
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
     for (var k = 0; k < 11; k++) { var s = freeSpot(8, 88, player, 28); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; mag = 30; reloadT = 0; fireT = 0; firing = false; zoneR = 95; dmgFlash = 0;
-    setScope(false); state = 'play'; $('overlay').hidden = true;
+    setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
     initAudio(); sfx('start');
     if (!isTouch && game.requestPointerLock) { try { var pr = game.requestPointerLock(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   }
   function endGame(win) {
-    setScope(false); state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
+    setScope(false); vault = null; vaultY = 0; vaultShown = false; $('vaultBtn').hidden = true; state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
     if (document.exitPointerLock) { try { document.exitPointerLock(); } catch (e) {} }
     $('ovTitle').textContent = win ? 'जीत गए! आख़िरी खिलाड़ी आप हैं' : 'आप आउट हो गए';
     $('ovText').textContent = 'किल: ' + kills + ' · समय: ' + Math.floor(matchT) + ' सेकंड';
@@ -584,6 +632,7 @@ body.touch .sbtn { display:flex; }
     if (e.code === 'KeyR') reload();
     if (e.code === 'KeyV') toggleCam();
     if (e.code === 'KeyZ') toggleScope();
+    if (e.code === 'KeyE') doVault();
     if (e.code === 'Space' || e.code === 'KeyF') { firing = true; e.preventDefault(); }
   });
   window.addEventListener('keyup', function (e) { keys[e.code] = false; if (e.code === 'Space' || e.code === 'KeyF') firing = false; });
@@ -623,6 +672,7 @@ body.touch .sbtn { display:flex; }
       else if (tg.id === 'camBtn') { toggleCam(); }
       else if (tg.id === 'muteBtn') { toggleMute(); }
       else if (tg.id === 'scopeBtn') { toggleScope(); }
+      else if (tg.id === 'vaultBtn') { doVault(); }
       else if (lookId === null) { lookId = t.identifier; lookLX = t.clientX; lookLY = t.clientY; }
     }
   }, { passive: false });
@@ -655,10 +705,13 @@ body.touch .sbtn { display:flex; }
     var ml = Math.sqrt(fwd * fwd + str * str); if (ml > 1) { fwd /= ml; str /= ml; }
     var sp = (keys.ShiftLeft || keys.ShiftRight) ? 8.5 : 6;
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
-    player.x += (-sy * fwd + cy * str) * sp * dt;
-    player.z += (-cy * fwd - sy * str) * sp * dt;
-    resolve(player, 0.45);
-    placeCamera(ml > 0.1);
+    if (vault) stepVault(dt);
+    else {
+      player.x += (-sy * fwd + cy * str) * sp * dt;
+      player.z += (-cy * fwd - sy * str) * sp * dt;
+      resolve(player, 0.45);
+    }
+    placeCamera(ml > 0.1 || !!vault); updateVaultUI();
     var tf = scoped ? 24 : 75;
     if (Math.abs(camera.fov - tf) > 0.1) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 14); camera.updateProjectionMatrix(); }
     if (ml > 0.1) { stepT -= dt * sp / 6; if (stepT <= 0) { stepT = 0.4; sfx('step'); } }
