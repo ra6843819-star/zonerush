@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="hi">
+<html lang="hi" translate="no">
 <head>
 <meta charset="utf-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#0b1118">
 <link rel="manifest" href="manifest.webmanifest">
@@ -40,7 +41,7 @@ body.touch .ctl { display:block; }
 #knob { position:absolute; left:40px; top:40px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.55); }
 #fireBtn { right:30px; bottom:40px; width:88px; height:88px; border-radius:50%; background:rgba(255,122,47,.75); border:2px solid #fff; color:#fff; font-weight:700; display:none; align-items:center; justify-content:center; font-size:.95rem; }
 body.touch #fireBtn { display:flex; }
-#rldBtn { right:46px; bottom:142px; width:58px; height:58px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.5); color:#fff; font-weight:700; display:none; align-items:center; justify-content:center; font-size:.8rem; }
+#rldBtn { right:134px; bottom:50px; width:58px; height:58px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.5); color:#fff; font-weight:700; display:none; align-items:center; justify-content:center; font-size:.8rem; }
 body.touch #rldBtn { display:flex; }
 .sbtn { position:absolute; right:10px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.45); color:#fff; font-size:.68rem; font-weight:600; display:none; align-items:center; justify-content:center; touch-action:none; z-index:3; }
 body.touch .sbtn { display:flex; }
@@ -83,7 +84,7 @@ body.touch .sbtn { display:flex; }
     <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 7 · स्कोप ठीक किया</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 8 · इंसान जैसे किरदार</p>
   </div>
 </div>
 
@@ -211,16 +212,69 @@ body.touch .sbtn { display:flex; }
   var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
 
+  var matCache = {};
+  function mat(c) { return matCache[c] || (matCache[c] = new THREE.MeshLambertMaterial({ color: c })); }
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  var pantsCols = [0x2b3a55, 0x4a4f3a, 0x5b5140, 0x2b2f3a];
+  var skinCols = [0xf1c8a0, 0xd9a577, 0xb77b52, 0x8d5a3a];
+  var hairCols = [0x161210, 0x2a1b10, 0x4a3320, 0x8a6a3a];
+  var helmCols = [0x4b5a3a, 0x3a4a5a, 0x5a4a3a];
+  var vestCols = [0x2f3a2c, 0x3b3b3b, 0x2c3440];
+
+  /* इंसान जैसा किरदार: पैर, धड़, बाँहें, हाथ, सिर, आँखें, बाल या हेलमेट और राइफ़ल */
+  function makeHuman(o) {
+    var g = new THREE.Group(), body = new THREE.Group(), meshes = [];
+    function add(parent, geo, col, x, y, z, isHead) {
+      var m = new THREE.Mesh(geo, mat(col)); m.position.set(x, y, z); parent.add(m);
+      meshes.push({ m: m, head: !!isHead }); return m;
+    }
+    function leg(sx) {
+      var p = new THREE.Group(); p.position.set(sx * 0.12, 0.92, 0);
+      add(p, new THREE.CylinderGeometry(0.095, 0.075, 0.9, 8), o.pants, 0, -0.46, 0);
+      add(p, new THREE.BoxGeometry(0.15, 0.1, 0.28), o.boots, 0, -0.88, 0.05);
+      g.add(p); return p;
+    }
+    var legL = leg(-1), legR = leg(1);
+    var torso = add(body, new THREE.CylinderGeometry(0.22, 0.19, 0.62, 12), o.shirt, 0, 1.24, 0); torso.scale.z = 0.7;
+    add(body, new THREE.BoxGeometry(0.46, 0.32, 0.27), o.vest, 0, 1.32, 0);
+    add(body, new THREE.BoxGeometry(0.4, 0.12, 0.25), o.belt, 0, 0.98, 0);
+    add(body, new THREE.CylinderGeometry(0.055, 0.065, 0.12, 8), o.skin, 0, 1.6, 0, true);
+    var head = add(body, new THREE.SphereGeometry(0.14, 12, 10), o.skin, 0, 1.73, 0, true); head.scale.y = 1.12;
+    add(body, new THREE.SphereGeometry(0.018, 6, 6), 0x111111, -0.05, 1.75, 0.125, true);
+    add(body, new THREE.SphereGeometry(0.018, 6, 6), 0x111111, 0.05, 1.75, 0.125, true);
+    if (o.helmet) {
+      add(body, new THREE.SphereGeometry(0.172, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), o.helmet, 0, 1.74, 0, true);
+      if (o.brim) add(body, new THREE.BoxGeometry(0.22, 0.02, 0.17), o.helmet, 0, 1.79, 0.17, true);
+    } else {
+      add(body, new THREE.SphereGeometry(0.152, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hair, 0, 1.75, 0, true);
+    }
+    function arm(sx) {
+      var p = new THREE.Group(); p.rotation.order = 'YXZ'; p.position.set(sx * 0.3, 1.5, 0);
+      add(p, new THREE.CylinderGeometry(0.065, 0.055, 0.6, 8), o.shirt, 0, -0.3, 0);
+      add(p, new THREE.SphereGeometry(0.06, 8, 6), o.skin, 0, -0.64, 0);
+      body.add(p); add(body, new THREE.SphereGeometry(0.075, 8, 6), o.shirt, sx * 0.3, 1.5, 0);
+      return p;
+    }
+    var armL = arm(-1), armR = arm(1);
+    armR.rotation.set(-1.3, -0.32, 0); armL.rotation.set(-1.3, 0.32, 0);
+    add(body, new THREE.BoxGeometry(0.07, 0.11, 0.62), 0x20242b, 0, 1.36, 0.5);
+    add(body, new THREE.BoxGeometry(0.06, 0.12, 0.22), 0x3a2a1c, 0, 1.34, 0.12);
+    add(body, new THREE.BoxGeometry(0.05, 0.16, 0.07), 0x20242b, 0, 1.25, 0.5);
+    g.add(body);
+    return { g: g, body: body, legL: legL, legR: legR, meshes: meshes, ph: Math.random() * 6 };
+  }
+  function poseHuman(h, ph, moving) {
+    var s = moving ? Math.sin(ph) : 0;
+    h.legL.rotation.x = s * 0.75; h.legR.rotation.x = -s * 0.75;
+    h.body.position.y = moving ? Math.abs(Math.cos(ph)) * 0.045 : 0;
+  }
+
   function makeBot(x, z) {
-    var g = new THREE.Group(), col = botCols[Math.floor(Math.random() * botCols.length)];
-    var body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), new THREE.MeshLambertMaterial({ color: col })); body.position.y = 0.95;
-    var legs = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.4), new THREE.MeshLambertMaterial({ color: 0x2b2f3a })); legs.position.y = 0.35;
-    var head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 8), new THREE.MeshLambertMaterial({ color: 0xe0b48f })); head.position.y = 1.82;
-    var bg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.7), new THREE.MeshLambertMaterial({ color: 0x20242b })); bg.position.set(0.35, 1.1, 0.4);
-    g.add(body, legs, head, bg); g.position.set(x, 0, z); scene.add(g);
-    var b = { g: g, x: x, z: z, hp: 100, alive: true, tx: x, tz: z, tT: 0, shootT: rnd(0.5, 1.5), losT: rnd(0, 0.3), target: null, los: false, strafe: 1, st: 0, face: 0 };
-    body.userData = { bot: b, part: 'body' }; legs.userData = { bot: b, part: 'body' }; head.userData = { bot: b, part: 'head' };
-    b.parts = [body, legs, head];
+    var h = makeHuman({ shirt: pick(botCols), vest: pick(vestCols), pants: pick(pantsCols), boots: 0x1c1a18, belt: 0x1c1a18, skin: pick(skinCols), hair: pick(hairCols), helmet: Math.random() < 0.45 ? pick(helmCols) : 0 });
+    var g = h.g; g.position.set(x, 0, z); scene.add(g);
+    var b = { g: g, rig: h, x: x, z: z, hp: 100, alive: true, tx: x, tz: z, tT: 0, shootT: rnd(0.5, 1.5), losT: rnd(0, 0.3), target: null, los: false, strafe: 1, st: 0, face: 0 };
+    for (var i = 0; i < h.meshes.length; i++) h.meshes[i].m.userData = { bot: b, part: h.meshes[i].head ? 'head' : 'body' };
+    b.parts = h.meshes.map(function (e) { return e.m; });
     return b;
   }
 
@@ -322,7 +376,7 @@ body.touch .sbtn { display:flex; }
     if (pd < 75) sfx('botshot', { vol: Math.max(0.12, 1 - pd / 75), pan: (pdx * Math.cos(player.yaw) - pdz * Math.sin(player.yaw)) / pd });
     var chance = Math.max(0.15, Math.min(0.45, 0.55 - d * 0.012));
     var hit = Math.random() <= chance, off = hit ? 0 : 1.6;
-    var bs = new THREE.Vector3(b.x + Math.sin(b.face) * 0.7, 1.2, b.z + Math.cos(b.face) * 0.7);
+    var bs = new THREE.Vector3(b.x + Math.sin(b.face) * 0.95, 1.36, b.z + Math.cos(b.face) * 0.95);
     spawnBullet(bs, new THREE.Vector3(t.x + (Math.random() - 0.5) * off * 2, 1.3 + (Math.random() - 0.5) * off, t.z + (Math.random() - 0.5) * off * 2), 'b');
     if (!hit) return;
     if (t === player) damagePlayer(6 + Math.random() * 5);
@@ -354,6 +408,7 @@ body.touch .sbtn { display:flex; }
     var ml = Math.sqrt(mx * mx + mz * mz); if (ml > 1) { mx /= ml; mz /= ml; }
     b.x += mx * speed * dt; b.z += mz * speed * dt; resolve(b, 0.5);
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
+    var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
 
   var bullets = [], bulletGeo = new THREE.BoxGeometry(0.22, 0.22, 3);
@@ -382,10 +437,10 @@ body.touch .sbtn { display:flex; }
     var sp = scoped ? 0.0015 : 0.006;
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
-    for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push(bots[i].parts[0], bots[i].parts[1], bots[i].parts[2]);
+    for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push.apply(list, bots[i].parts);
     var hits = rc.intersectObjects(list, false);
     camera.updateMatrixWorld(true); pm.updateMatrixWorld(true);
-    var org = (tpp && !scoped) ? pm.localToWorld(new THREE.Vector3(0.35, 1.15, 0.85)) : gun.localToWorld(new THREE.Vector3(0, 0, -0.4));
+    var org = (tpp && !scoped) ? pm.localToWorld(new THREE.Vector3(0, 1.36, 0.95)) : gun.localToWorld(new THREE.Vector3(0, 0, -0.4));
     var sd = hits.length ? hits[0].distance : 90;
     spawnBullet(org, rc.ray.origin.clone().addScaledVector(rc.ray.direction, sd), 'p');
     if (hits.length && hits[0].object.userData.bot) {
@@ -396,18 +451,13 @@ body.touch .sbtn { display:flex; }
     if (mag === 0) reload();
   }
 
-  var pgFlash;
+  var pgFlash, prig;
   var pm = new THREE.Group();
   (function () {
-    var jm = new THREE.MeshLambertMaterial({ color: 0xff7a2f }), dk = new THREE.MeshLambertMaterial({ color: 0x20242b });
-    var pb = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), jm); pb.position.y = 0.95;
-    var pl = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.4), new THREE.MeshLambertMaterial({ color: 0x23406b })); pl.position.y = 0.35;
-    var ph = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 8), new THREE.MeshLambertMaterial({ color: 0xe0b48f })); ph.position.y = 1.82;
-    var cap = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.16, 0.6), dk); cap.position.set(0, 2.02, 0.05);
-    var pgun = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.7), dk); pgun.position.set(0.35, 1.15, 0.4);
+    prig = makeHuman({ shirt: 0xff7a2f, vest: 0x2a2f38, pants: 0x23406b, boots: 0x20242b, belt: 0x20242b, skin: 0xe0b48f, hair: 0x161210, helmet: 0x20242b, brim: true });
     pgFlash = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), new THREE.MeshBasicMaterial({ color: 0xffd04a }));
-    pgFlash.position.set(0.35, 1.15, 0.85); pgFlash.visible = false;
-    pm.add(pb, pl, ph, cap, pgun, pgFlash); pm.visible = false; scene.add(pm);
+    pgFlash.position.set(0, 1.36, 0.95); pgFlash.visible = false; prig.g.add(pgFlash);
+    pm.add(prig.g); pm.visible = false; scene.add(pm);
   })();
 
   var cdir = new THREE.Vector3(), cpiv = new THREE.Vector3();
@@ -417,7 +467,7 @@ body.touch .sbtn { display:flex; }
     var fp = !tpp || scoped;
     gun.visible = fp && !scoped;
     pm.visible = !fp && player.alive;
-    pm.position.set(player.x, moving ? Math.abs(Math.sin(matchT * 10)) * 0.06 : 0, player.z);
+    pm.position.set(player.x, 0, player.z); poseHuman(prig, matchT * 9, moving);
     pm.rotation.y = player.yaw + Math.PI;
     if (fp) { camera.position.set(player.x, 1.65, player.z); return; }
     cpiv.set(player.x + cy * 0.6, 1.7, player.z - sy * 0.6);
