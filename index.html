@@ -84,7 +84,7 @@ body.touch #runBtn { display:flex; }
 <div id="game">
   <div class="hud" id="scopeOv" hidden></div>
   <div class="hud" id="stats">
-    <div class="pill" id="statTxt">बचे: 12 · किल: 0</div>
+    <div class="pill" id="statTxt">बचे: 30 · किल: 0</div>
     <div id="hpWrap"><div id="hpBar"></div></div>
     <div id="arWrap"><div id="arBar"></div></div>
   </div>
@@ -112,10 +112,10 @@ body.touch #runBtn { display:flex; }
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
-    <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
+    <p id="ovText">30 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 16 · गाड़ी में सिर्फ़ गाड़ी के बटन</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 18 · असली इंसान जैसा किरदार</p>
   </div>
 </div>
 
@@ -133,11 +133,11 @@ body.touch #runBtn { display:flex; }
     $('startBtn').hidden = true; return;
   }
 
-  var WORLD_R = 98;
+  var WORLD_R = 153, ZONE0 = 148;
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec9e8);
   scene.fog = new THREE.Fog(0x9ec9e8, 45, 170);
-  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 300);
+  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 230);
   camera.rotation.order = 'YXZ';
   scene.add(camera);
   var renderer = new THREE.WebGLRenderer({ antialias: !isTouch });
@@ -151,7 +151,7 @@ body.touch #runBtn { display:flex; }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6c8a5a, 0.85));
   var sun = new THREE.DirectionalLight(0xfff2d6, 0.6); sun.position.set(40, 80, 20); scene.add(sun);
-  var ground = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(560, 560), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
   ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
   var obstacles = [], obsMeshes = [];
@@ -229,22 +229,22 @@ body.touch #runBtn { display:flex; }
     houses.push({ x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2 });
   }
   var placed = 0, guard = 0;
-  while (placed < 14 && guard++ < 600) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 78;
+  while (placed < 30 && guard++ < 2000) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 126;
     var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(8, 12), bd = rnd(7, 10);
     if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
     addHouse(bx, bz, bw, bd, Math.floor(Math.random() * 4), wallCols[Math.floor(Math.random() * wallCols.length)], roofCols[Math.floor(Math.random() * roofCols.length)]); placed++;
   }
   placed = 0; guard = 0;
-  while (placed < 26 && guard++ < 400) {
-    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 90, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
+  while (placed < 40 && guard++ < 800) {
+    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 142, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
     if (blocked(cx, cz, 3)) continue;
     addBox(cx, cz, 2, 1.4, 2, 0x8a5a2b); placed++;
   }
   var trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2b }), leafMat = new THREE.MeshLambertMaterial({ color: 0x2f7a3c });
   placed = 0; guard = 0;
-  while (placed < 50 && guard++ < 500) {
-    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 94, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
+  while (placed < 90 && guard++ < 1000) {
+    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 148, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
     if (blocked(tx, tz, 2)) continue;
     var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 6), trunkMat);
     trunk.position.set(tx, 1.5, tz); scene.add(trunk); obsMeshes.push(trunk);
@@ -296,7 +296,7 @@ body.touch #runBtn { display:flex; }
   }
 
   var player = { x: 0, z: 60, hp: 100, yaw: 0, pitch: 0, alive: true };
-  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 95, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
+  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 148, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
   var rc = new THREE.Raycaster();
   var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
@@ -310,56 +310,104 @@ body.touch #runBtn { display:flex; }
   var helmCols = [0x4b5a3a, 0x3a4a5a, 0x5a4a3a];
   var vestCols = [0x2f3a2c, 0x3b3b3b, 0x2c3440];
 
-  /* इंसान जैसा किरदार: पैर, धड़, बाँहें, हाथ, सिर, आँखें, बाल या हेलमेट और राइफ़ल */
+  /* असली इंसान जैसा किरदार: जोड़ वाले पैर (घुटने), पतला धड़, टैक्टिकल वेस्ट, बैगपैक, चेहरा (आँख, भौं, नाक, मुँह, कान), दस्ताने, राइफ़ल */
+  var geoCache = {};
+  function GC(key, make) { return geoCache[key] || (geoCache[key] = make()); }
+  function cyl(a, b, h, s) { return GC('c' + [a, b, h, s], function () { return new THREE.CylinderGeometry(a, b, h, s); }); }
+  function box(w, h, d) { return GC('b' + [w, h, d], function () { return new THREE.BoxGeometry(w, h, d); }); }
+  function sph(r, ws, hs, ps, pl, ts, tl) { return GC('s' + [r, ws, hs, ps, pl, ts, tl], function () { return new THREE.SphereGeometry(r, ws, hs, ps, pl, ts, tl); }); }
+  function shade(c, k) {
+    var r = Math.min(255, Math.round(((c >> 16) & 255) * k)), g = Math.min(255, Math.round(((c >> 8) & 255) * k)), b = Math.min(255, Math.round((c & 255) * k));
+    return (r << 16) | (g << 8) | b;
+  }
   function makeHuman(o) {
-    var g = new THREE.Group(), body = new THREE.Group(), meshes = [];
-    function add(parent, geo, col, x, y, z, isHead) {
+    var g = new THREE.Group(), body = new THREE.Group(), meshes = [], fine = [], dark = 0x1d2026;
+    function add(parent, geo, col, x, y, z, fl) {
       var m = new THREE.Mesh(geo, mat(col)); m.position.set(x, y, z); parent.add(m);
-      meshes.push({ m: m, head: !!isHead }); return m;
+      meshes.push({ m: m, head: !!(fl && fl.head) }); if (fl && fl.fine) fine.push(m); return m;
     }
+    var F = { fine: 1 }, FH = { fine: 1, head: 1 }, H = { head: 1 };
     function leg(sx) {
-      var p = new THREE.Group(); p.position.set(sx * 0.12, 0.92, 0);
-      add(p, new THREE.CylinderGeometry(0.095, 0.075, 0.9, 8), o.pants, 0, -0.46, 0);
-      add(p, new THREE.BoxGeometry(0.15, 0.1, 0.28), o.boots, 0, -0.88, 0.05);
-      g.add(p); return p;
+      var hip = new THREE.Group(); hip.position.set(sx * 0.11, 0.99, 0);
+      add(hip, cyl(0.095, 0.072, 0.46, 9), o.pants, 0, -0.23, 0);
+      add(hip, box(0.04, 0.12, 0.1), shade(o.pants, 0.8), sx * 0.09, -0.2, 0.02, F);
+      var knee = new THREE.Group(); knee.position.set(0, -0.46, 0); hip.add(knee);
+      add(knee, cyl(0.072, 0.055, 0.44, 9), o.pants, 0, -0.22, 0);
+      add(knee, box(0.1, 0.1, 0.05), dark, 0, 0, 0.06, F);
+      var foot = new THREE.Group(); foot.position.set(0, -0.44, 0); knee.add(foot);
+      add(foot, cyl(0.062, 0.07, 0.14, 8), o.boots, 0, 0.03, 0);
+      add(foot, box(0.115, 0.09, 0.27), o.boots, 0, -0.04, 0.05);
+      add(foot, box(0.12, 0.03, 0.285), 0x0e0f11, 0, -0.095, 0.05, F);
+      g.add(hip); return { hip: hip, knee: knee };
     }
-    var legL = leg(-1), legR = leg(1);
-    var torso = add(body, new THREE.CylinderGeometry(0.22, 0.19, 0.62, 12), o.shirt, 0, 1.24, 0); torso.scale.z = 0.7;
-    add(body, new THREE.BoxGeometry(0.46, 0.32, 0.27), o.vest, 0, 1.32, 0);
-    add(body, new THREE.BoxGeometry(0.4, 0.12, 0.25), o.belt, 0, 0.98, 0);
-    add(body, new THREE.CylinderGeometry(0.055, 0.065, 0.12, 8), o.skin, 0, 1.6, 0, true);
-    var head = add(body, new THREE.SphereGeometry(0.14, 12, 10), o.skin, 0, 1.73, 0, true); head.scale.y = 1.12;
-    add(body, new THREE.SphereGeometry(0.018, 6, 6), 0x111111, -0.05, 1.75, 0.125, true);
-    add(body, new THREE.SphereGeometry(0.018, 6, 6), 0x111111, 0.05, 1.75, 0.125, true);
+    var LL = leg(-1), LR = leg(1);
+    // कमर, पेट, सीना
+    add(body, box(0.35, 0.16, 0.21), o.pants, 0, 1.0, 0);
+    add(body, box(0.37, 0.05, 0.225), o.belt, 0, 1.08, 0, F);
+    add(body, box(0.06, 0.14, 0.05), dark, 0.2, 0.96, 0, F);
+    var abd = add(body, cyl(0.15, 0.16, 0.2, 10), o.shirt, 0, 1.19, 0); abd.scale.z = 0.75;
+    var chest = add(body, cyl(0.2, 0.15, 0.38, 12), o.shirt, 0, 1.4, 0); chest.scale.z = 0.68;
+    add(body, box(0.4, 0.33, 0.24), o.vest, 0, 1.38, 0);
+    add(body, box(0.09, 0.1, 0.05), dark, -0.12, 1.3, 0.14, F); add(body, box(0.09, 0.1, 0.05), dark, 0, 1.3, 0.14, F); add(body, box(0.09, 0.1, 0.05), dark, 0.12, 1.3, 0.14, F);
+    add(body, box(0.07, 0.12, 0.26), o.vest, -0.12, 1.55, 0, F); add(body, box(0.07, 0.12, 0.26), o.vest, 0.12, 1.55, 0, F);
+    add(body, sph(0.075, 8, 6), o.shirt, -0.27, 1.53, 0, F); add(body, sph(0.075, 8, 6), o.shirt, 0.27, 1.53, 0, F);
+    // बैगपैक
+    add(body, box(0.34, 0.44, 0.17), shade(o.vest, 1.35), 0, 1.36, -0.21);
+    add(body, box(0.3, 0.1, 0.16), shade(o.vest, 1.1), 0, 1.62, -0.21, F);
+    add(body, cyl(0.055, 0.06, 0.1, 8), o.skin, 0, 1.6, 0);
+    // सिर और चेहरा
+    var head = add(body, sph(0.125, 14, 12), o.skin, 0, 1.74, 0, H); head.scale.set(0.95, 1.15, 1.0);
+    add(body, sph(0.02, 8, 6), 0xf4f4f0, -0.045, 1.76, 0.108, FH); add(body, sph(0.02, 8, 6), 0xf4f4f0, 0.045, 1.76, 0.108, FH);
+    add(body, sph(0.011, 6, 6), 0x15110e, -0.045, 1.76, 0.121, FH); add(body, sph(0.011, 6, 6), 0x15110e, 0.045, 1.76, 0.121, FH);
+    add(body, box(0.05, 0.012, 0.012), o.hair, -0.047, 1.795, 0.113, FH); add(body, box(0.05, 0.012, 0.012), o.hair, 0.047, 1.795, 0.113, FH);
+    add(body, box(0.022, 0.04, 0.03), o.skin, 0, 1.735, 0.13, FH);
+    add(body, box(0.05, 0.009, 0.008), 0x7a3535, 0, 1.69, 0.12, FH);
+    add(body, sph(0.03, 6, 6), o.skin, -0.118, 1.74, 0, FH); add(body, sph(0.03, 6, 6), o.skin, 0.118, 1.74, 0, FH);
     if (o.helmet) {
-      add(body, new THREE.SphereGeometry(0.172, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), o.helmet, 0, 1.74, 0, true);
-      if (o.brim) add(body, new THREE.BoxGeometry(0.22, 0.02, 0.17), o.helmet, 0, 1.79, 0.17, true);
+      var hm = add(body, sph(0.16, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), o.helmet, 0, 1.775, -0.005, H); hm.rotation.x = -0.15;
+      if (o.brim) add(body, box(0.2, 0.02, 0.14), o.helmet, 0, 1.8, 0.15, FH);
+      add(body, box(0.012, 0.1, 0.012), dark, -0.105, 1.68, 0.03, FH); add(body, box(0.012, 0.1, 0.012), dark, 0.105, 1.68, 0.03, FH);
     } else {
-      add(body, new THREE.SphereGeometry(0.152, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hair, 0, 1.75, 0, true);
+      var hr = add(body, sph(0.135, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), o.hair, 0, 1.755, -0.012, H); hr.rotation.x = -0.4; hr.scale.y = 1.12;
+      if (o.acc === 3) add(body, cyl(0.131, 0.131, 0.03, 14), 0xc0392b, 0, 1.81, 0, FH);
     }
+    if (o.acc === 1) { add(body, box(0.14, 0.035, 0.02), dark, 0, 1.762, 0.124, FH); add(body, box(0.01, 0.01, 0.1), dark, -0.125, 1.762, 0.06, FH); add(body, box(0.01, 0.01, 0.1), dark, 0.125, 1.762, 0.06, FH); }
+    if (o.acc === 2) add(body, box(0.115, 0.075, 0.07), shade(o.vest, 0.8), 0, 1.69, 0.085, FH);
+    // बाँहें: कंधा -> कोहनी -> दस्ताना
     function arm(sx) {
-      var p = new THREE.Group(); p.rotation.order = 'YXZ'; p.position.set(sx * 0.3, 1.5, 0);
-      add(p, new THREE.CylinderGeometry(0.065, 0.055, 0.6, 8), o.shirt, 0, -0.3, 0);
-      add(p, new THREE.SphereGeometry(0.06, 8, 6), o.skin, 0, -0.64, 0);
-      body.add(p); add(body, new THREE.SphereGeometry(0.075, 8, 6), o.shirt, sx * 0.3, 1.5, 0);
-      return p;
+      var sh = new THREE.Group(); sh.rotation.order = 'YXZ'; sh.position.set(sx * 0.27, 1.53, 0);
+      add(sh, cyl(0.065, 0.055, 0.3, 9), o.shirt, 0, -0.15, 0);
+      var el = new THREE.Group(); el.position.set(0, -0.3, 0); sh.add(el);
+      add(el, sph(0.055, 8, 6), o.shirt, 0, 0, 0, F);
+      add(el, cyl(0.05, 0.042, 0.27, 9), o.shortSleeve ? o.skin : shade(o.shirt, 0.92), 0, -0.14, 0);
+      add(el, box(0.07, 0.09, 0.09), 0x23262b, 0, -0.31, 0.01);
+      body.add(sh); return { sh: sh, el: el };
     }
-    var armL = arm(-1), armR = arm(1);
-    armR.rotation.set(-1.3, -0.32, 0); armL.rotation.set(-1.3, 0.32, 0);
-    add(body, new THREE.BoxGeometry(0.07, 0.11, 0.62), 0x20242b, 0, 1.36, 0.5);
-    add(body, new THREE.BoxGeometry(0.06, 0.12, 0.22), 0x3a2a1c, 0, 1.34, 0.12);
-    add(body, new THREE.BoxGeometry(0.05, 0.16, 0.07), 0x20242b, 0, 1.25, 0.5);
+    var AL = arm(-1), AR = arm(1);
+    AL.sh.rotation.set(-1.2, 0.45, 0); AL.el.rotation.set(-0.3, 0, 0);
+    AR.sh.rotation.set(-0.3, -0.6, 0); AR.el.rotation.set(-1.25, 0, 0);
+    // राइफ़ल
+    add(body, box(0.07, 0.11, 0.62), 0x20242b, 0, 1.36, 0.5);
+    var bar = add(body, cyl(0.018, 0.018, 0.2, 8), 0x14161a, 0, 1.38, 0.9, F); bar.rotation.x = Math.PI / 2;
+    add(body, box(0.05, 0.16, 0.07), 0x15171b, 0, 1.25, 0.4, F);
+    add(body, box(0.06, 0.1, 0.2), 0x3a2a1c, 0, 1.34, 0.14, F);
+    add(body, box(0.04, 0.05, 0.14), 0x101114, 0, 1.44, 0.5, F);
     g.add(body);
-    return { g: g, body: body, legL: legL, legR: legR, meshes: meshes, ph: Math.random() * 6 };
+    return {
+      g: g, body: body, legL: LL.hip, legR: LR.hip, kneeL: LL.knee, kneeR: LR.knee, meshes: meshes, ph: Math.random() * 6,
+      setDetail: function (v) { for (var i = 0; i < fine.length; i++) fine[i].visible = v; }
+    };
   }
   function poseHuman(h, ph, moving) {
-    var s = moving ? Math.sin(ph) : 0;
+    var s = moving ? Math.sin(ph) : 0, c = moving ? Math.cos(ph) : 0;
     h.legL.rotation.x = s * 0.75; h.legR.rotation.x = -s * 0.75;
-    h.body.position.y = moving ? Math.abs(Math.cos(ph)) * 0.045 : 0;
+    h.kneeL.rotation.x = Math.max(0, -c) * 0.95; h.kneeR.rotation.x = Math.max(0, c) * 0.95;
+    h.body.position.y = moving ? Math.abs(c) * 0.04 : Math.sin(ph * 0.25) * 0.004;
+    h.body.rotation.y = s * 0.05;
   }
 
   function makeBot(x, z) {
-    var h = makeHuman({ shirt: pick(botCols), vest: pick(vestCols), pants: pick(pantsCols), boots: 0x1c1a18, belt: 0x1c1a18, skin: pick(skinCols), hair: pick(hairCols), helmet: Math.random() < 0.45 ? pick(helmCols) : 0 });
+    var h = makeHuman({ shirt: pick(botCols), vest: pick(vestCols), pants: pick(pantsCols), boots: 0x1c1a18, belt: 0x1c1a18, skin: pick(skinCols), hair: pick(hairCols), helmet: Math.random() < 0.45 ? pick(helmCols) : 0, acc: pick([0, 0, 1, 2, 3]), shortSleeve: Math.random() < 0.4 });
     var g = h.g; g.position.set(x, 0, z); scene.add(g);
     var b = { g: g, rig: h, x: x, z: z, hp: 100, alive: true, tx: x, tz: z, tT: 0, shootT: rnd(0.5, 1.5), losT: rnd(0, 0.3), target: null, los: false, strafe: 1, st: 0, face: 0 };
     for (var i = 0; i < h.meshes.length; i++) h.meshes[i].m.userData = { bot: b, part: h.meshes[i].head ? 'head' : 'body' };
@@ -549,8 +597,8 @@ body.touch #runBtn { display:flex; }
         spawnLoot(t, s.x, s.z);
       }
     }
-    for (i = 0; i < 22; i++) {
-      s = freeSpot(6, 88);
+    for (i = 0; i < 40; i++) {
+      s = freeSpot(6, 145);
       if (blocked(s.x, s.z, 1.2)) continue;
       spawnLoot(pickLootType(), s.x, s.z);
     }
@@ -670,8 +718,8 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 60; k++) {
       var x, z;
       if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
-      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 86); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
-      if (Math.hypot(x, z) > 90 || blocked(x, z, 3)) continue;
+      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 146); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 150 || blocked(x, z, 3)) continue;
       var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
       if (ok) return { x: x, z: z };
     }
@@ -679,7 +727,7 @@ body.touch #runBtn { display:flex; }
   }
   function spawnVehicles() {
     clearVehicles();
-    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
+    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
     s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
     for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
   }
@@ -788,7 +836,7 @@ body.touch #runBtn { display:flex; }
     if (Math.hypot(b.x, b.z) > zoneR) { b.hp -= 3 * dt; if (b.hp <= 0) { killBot(b, null); return; } }
     b.losT -= dt; if (b.losT <= 0) { b.losT = 0.35; findTarget(b); }
     if (b.target && !b.target.alive && b.target !== player) b.target = null;
-    var speed = 3.2, mx = 0, mz = 0;
+    var speed = 4.2, mx = 0, mz = 0;
     if (b.target) {
       var t = b.target, dx = t.x - b.x, dz = t.z - b.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
       b.face = Math.atan2(dx, dz);
@@ -817,6 +865,9 @@ body.touch #runBtn { display:flex; }
       if (b.stuckT > 0.35) { b.stuckT = 0; b.det = Math.random() < 0.5 ? -1 : 1; b.detT = 1.4; }
     } else b.stuckT = 0;
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
+    var dpl = Math.hypot(b.x - player.x, b.z - player.z), dv = dpl < 32;
+    if (dv !== b.dv) { b.dv = dv; b.rig.setDetail(dv); }
+    b.g.visible = dpl < 175;
     var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
 
@@ -863,7 +914,7 @@ body.touch #runBtn { display:flex; }
   var pgFlash, prig;
   var pm = new THREE.Group();
   (function () {
-    prig = makeHuman({ shirt: 0xff7a2f, vest: 0x2a2f38, pants: 0x23406b, boots: 0x20242b, belt: 0x20242b, skin: 0xe0b48f, hair: 0x161210, helmet: 0x20242b, brim: true });
+    prig = makeHuman({ shirt: 0xff7a2f, vest: 0x2a2f38, pants: 0x23406b, boots: 0x20242b, belt: 0x20242b, skin: 0xe0b48f, hair: 0x161210, helmet: 0x20242b, brim: true, acc: 1, shortSleeve: false });
     pgFlash = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), new THREE.MeshBasicMaterial({ color: 0xffd04a }));
     pgFlash.position.set(0, 1.36, 0.95); pgFlash.visible = false; prig.g.add(pgFlash);
     pm.add(prig.g); pm.visible = false; scene.add(pm);
@@ -964,10 +1015,10 @@ body.touch #runBtn { display:flex; }
   function startMatch() {
     for (var i = 0; i < bots.length; i++) scene.remove(bots[i].g);
     bots = []; clearBullets();
-    var sp = freeSpot(55, 85);
+    var sp = freeSpot(95, 140);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 11; k++) { var s = freeSpot(8, 88, player, 28); bots.push(makeBot(s.x, s.z)); }
-    matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = 95; dmgFlash = 0;
+    for (var k = 0; k < 29; k++) { var s = freeSpot(8, 146, player, 40); bots.push(makeBot(s.x, s.z)); }
+    matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
     toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
     setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
@@ -1072,7 +1123,7 @@ body.touch #runBtn { display:flex; }
   var lastTxt = '';
   function update(dt) {
     matchT += dt;
-    zoneR = Math.max(8, 95 - Math.max(0, matchT - 25) * 0.85);
+    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 1.3);
     zoneMesh.scale.set(zoneR, 1, zoneR);
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
@@ -1116,7 +1167,7 @@ body.touch #runBtn { display:flex; }
     $('arBar').style.width = armor * 2 + '%';
     if (drive) $('ammo').textContent = VEH[drive.type].n + ' · ' + Math.round(Math.abs(drive.sp) * 3.6) + ' किमी/घं';
     else $('ammo').textContent = W().n + ' · ' + (reloadT > 0 ? 'रीलोड…' : mag + ' / ' + reserve);
-    $('zoneInfo').textContent = matchT < 25 ? 'ज़ोन सिकुड़ेगा: ' + Math.ceil(25 - matchT) + ' सेकंड' : 'ज़ोन सिकुड़ रहा है (' + Math.round(zoneR) + ' मी)';
+    $('zoneInfo').textContent = matchT < 40 ? 'ज़ोन सिकुड़ेगा: ' + Math.ceil(40 - matchT) + ' सेकंड' : 'ज़ोन सिकुड़ रहा है (' + Math.round(zoneR) + ' मी)';
   }
 
   var last = performance.now();
@@ -1127,7 +1178,7 @@ body.touch #runBtn { display:flex; }
     else if (state === 'menu') {
       menuYaw += dt * 0.12; camera.position.set(0, 1.65, 60); camera.rotation.set(-0.05, menuYaw, 0);
       pm.visible = false; gun.visible = false;
-      zoneMesh.scale.set(95, 1, 95);
+      zoneMesh.scale.set(ZONE0, 1, ZONE0);
     }
     renderer.render(scene, camera);
   }
