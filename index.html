@@ -84,7 +84,7 @@ body.touch #runBtn { display:flex; }
 <div id="game">
   <div class="hud" id="scopeOv" hidden></div>
   <div class="hud" id="stats">
-    <div class="pill" id="statTxt">बचे: 30 · किल: 0</div>
+    <div class="pill" id="statTxt">बचे: 12 · किल: 0</div>
     <div id="hpWrap"><div id="hpBar"></div></div>
     <div id="arWrap"><div id="arBar"></div></div>
   </div>
@@ -112,10 +112,10 @@ body.touch #runBtn { display:flex; }
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
-    <p id="ovText">30 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
+    <p id="ovText">12 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 17 · बड़ा नक़्शा, 30 खिलाड़ी</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 16 · गाड़ी में सिर्फ़ गाड़ी के बटन</p>
   </div>
 </div>
 
@@ -133,11 +133,11 @@ body.touch #runBtn { display:flex; }
     $('startBtn').hidden = true; return;
   }
 
-  var WORLD_R = 153, ZONE0 = 148;
+  var WORLD_R = 98;
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec9e8);
   scene.fog = new THREE.Fog(0x9ec9e8, 45, 170);
-  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 230);
+  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 300);
   camera.rotation.order = 'YXZ';
   scene.add(camera);
   var renderer = new THREE.WebGLRenderer({ antialias: !isTouch });
@@ -151,7 +151,7 @@ body.touch #runBtn { display:flex; }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6c8a5a, 0.85));
   var sun = new THREE.DirectionalLight(0xfff2d6, 0.6); sun.position.set(40, 80, 20); scene.add(sun);
-  var ground = new THREE.Mesh(new THREE.PlaneGeometry(560, 560), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
   ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
   var obstacles = [], obsMeshes = [];
@@ -229,22 +229,22 @@ body.touch #runBtn { display:flex; }
     houses.push({ x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2 });
   }
   var placed = 0, guard = 0;
-  while (placed < 30 && guard++ < 2000) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 126;
+  while (placed < 14 && guard++ < 600) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 78;
     var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(8, 12), bd = rnd(7, 10);
     if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
     addHouse(bx, bz, bw, bd, Math.floor(Math.random() * 4), wallCols[Math.floor(Math.random() * wallCols.length)], roofCols[Math.floor(Math.random() * roofCols.length)]); placed++;
   }
   placed = 0; guard = 0;
-  while (placed < 40 && guard++ < 800) {
-    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 142, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
+  while (placed < 26 && guard++ < 400) {
+    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 90, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
     if (blocked(cx, cz, 3)) continue;
     addBox(cx, cz, 2, 1.4, 2, 0x8a5a2b); placed++;
   }
   var trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2b }), leafMat = new THREE.MeshLambertMaterial({ color: 0x2f7a3c });
   placed = 0; guard = 0;
-  while (placed < 90 && guard++ < 1000) {
-    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 148, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
+  while (placed < 50 && guard++ < 500) {
+    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 94, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
     if (blocked(tx, tz, 2)) continue;
     var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 6), trunkMat);
     trunk.position.set(tx, 1.5, tz); scene.add(trunk); obsMeshes.push(trunk);
@@ -296,7 +296,7 @@ body.touch #runBtn { display:flex; }
   }
 
   var player = { x: 0, z: 60, hp: 100, yaw: 0, pitch: 0, alive: true };
-  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 148, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
+  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 95, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
   var rc = new THREE.Raycaster();
   var zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
@@ -549,8 +549,8 @@ body.touch #runBtn { display:flex; }
         spawnLoot(t, s.x, s.z);
       }
     }
-    for (i = 0; i < 40; i++) {
-      s = freeSpot(6, 145);
+    for (i = 0; i < 22; i++) {
+      s = freeSpot(6, 88);
       if (blocked(s.x, s.z, 1.2)) continue;
       spawnLoot(pickLootType(), s.x, s.z);
     }
@@ -670,8 +670,8 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 60; k++) {
       var x, z;
       if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
-      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 146); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
-      if (Math.hypot(x, z) > 150 || blocked(x, z, 3)) continue;
+      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 86); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 90 || blocked(x, z, 3)) continue;
       var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
       if (ok) return { x: x, z: z };
     }
@@ -679,7 +679,7 @@ body.touch #runBtn { display:flex; }
   }
   function spawnVehicles() {
     clearVehicles();
-    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
+    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
     s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
     for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
   }
@@ -788,7 +788,7 @@ body.touch #runBtn { display:flex; }
     if (Math.hypot(b.x, b.z) > zoneR) { b.hp -= 3 * dt; if (b.hp <= 0) { killBot(b, null); return; } }
     b.losT -= dt; if (b.losT <= 0) { b.losT = 0.35; findTarget(b); }
     if (b.target && !b.target.alive && b.target !== player) b.target = null;
-    var speed = 4.2, mx = 0, mz = 0;
+    var speed = 3.2, mx = 0, mz = 0;
     if (b.target) {
       var t = b.target, dx = t.x - b.x, dz = t.z - b.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
       b.face = Math.atan2(dx, dz);
@@ -964,10 +964,10 @@ body.touch #runBtn { display:flex; }
   function startMatch() {
     for (var i = 0; i < bots.length; i++) scene.remove(bots[i].g);
     bots = []; clearBullets();
-    var sp = freeSpot(95, 140);
+    var sp = freeSpot(55, 85);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 29; k++) { var s = freeSpot(8, 146, player, 40); bots.push(makeBot(s.x, s.z)); }
-    matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
+    for (var k = 0; k < 11; k++) { var s = freeSpot(8, 88, player, 28); bots.push(makeBot(s.x, s.z)); }
+    matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = 95; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
     toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
     setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
@@ -1072,7 +1072,7 @@ body.touch #runBtn { display:flex; }
   var lastTxt = '';
   function update(dt) {
     matchT += dt;
-    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 1.3);
+    zoneR = Math.max(8, 95 - Math.max(0, matchT - 25) * 0.85);
     zoneMesh.scale.set(zoneR, 1, zoneR);
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
@@ -1116,7 +1116,7 @@ body.touch #runBtn { display:flex; }
     $('arBar').style.width = armor * 2 + '%';
     if (drive) $('ammo').textContent = VEH[drive.type].n + ' · ' + Math.round(Math.abs(drive.sp) * 3.6) + ' किमी/घं';
     else $('ammo').textContent = W().n + ' · ' + (reloadT > 0 ? 'रीलोड…' : mag + ' / ' + reserve);
-    $('zoneInfo').textContent = matchT < 40 ? 'ज़ोन सिकुड़ेगा: ' + Math.ceil(40 - matchT) + ' सेकंड' : 'ज़ोन सिकुड़ रहा है (' + Math.round(zoneR) + ' मी)';
+    $('zoneInfo').textContent = matchT < 25 ? 'ज़ोन सिकुड़ेगा: ' + Math.ceil(25 - matchT) + ' सेकंड' : 'ज़ोन सिकुड़ रहा है (' + Math.round(zoneR) + ' मी)';
   }
 
   var last = performance.now();
@@ -1127,7 +1127,7 @@ body.touch #runBtn { display:flex; }
     else if (state === 'menu') {
       menuYaw += dt * 0.12; camera.position.set(0, 1.65, 60); camera.rotation.set(-0.05, menuYaw, 0);
       pm.visible = false; gun.visible = false;
-      zoneMesh.scale.set(ZONE0, 1, ZONE0);
+      zoneMesh.scale.set(95, 1, 95);
     }
     renderer.render(scene, camera);
   }
