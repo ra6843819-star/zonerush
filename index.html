@@ -25,7 +25,7 @@ body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,s
 #stats { top:10px; left:10px; display:flex; flex-direction:column; gap:6px; }
 #hpWrap { width:130px; height:10px; background:rgba(255,255,255,.18); border-radius:6px; overflow:hidden; }
 #hpBar { height:100%; width:100%; background:var(--hp); transition:width .15s; }
-#zoneInfo { top:84px; left:10px; text-align:left; max-width:46%; font-size:.68rem; padding:4px 8px; }
+#zoneInfo { top:118px; left:10px; text-align:left; max-width:46%; font-size:.68rem; padding:4px 8px; }
 #statTxt { font-size:.75rem; }
 #ammo { top:10px; right:10px; font-size:.78rem; }
 #cross { top:50%; left:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; border:2px solid transparent; box-sizing:border-box; transition:border-color .08s; }
@@ -117,7 +117,8 @@ body.touch #runBtn { display:flex; }
     <div id="zoomLbl">2×</div>
   </div>
   <div class="hud" id="stats">
-    <div class="pill" id="statTxt">बचे: 50 · किल: 0</div>
+    <div class="pill" id="statTxt">बचे: 48 · किल: 0</div>
+    <div class="pill" id="teamTxt">टीम: 12 · साथी: 3/3</div>
     <div id="hpWrap"><div id="hpBar"></div></div>
     <div id="arWrap"><div id="arBar"></div></div>
   </div>
@@ -148,10 +149,10 @@ body.touch #runBtn { display:flex; }
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
-    <p id="ovText">50 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
+    <p id="ovText">48 खिलाड़ी, 12 टीमें — आपकी टीम में 4 लोग (3 साथी नीले रंग के, सिर के ऊपर नीला निशान)। सिकुड़ते लाल ज़ोन में रहिए और आख़िरी टीम बनिए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 26 · गोल निशान, दुश्मन आते ही लाल</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 27 · 4 लोगों की टीम (साथी बॉट)</p>
   </div>
 </div>
 
@@ -606,12 +607,17 @@ body.touch #runBtn { display:flex; }
     h.body.rotation.y = s * 0.05;
   }
 
-  function makeBot(x, z) {
-    var h = makeHuman({ shirt: pick(botCols), vest: pick(vestCols), pants: pick(pantsCols), boots: 0x1c1a18, belt: 0x1c1a18, skin: pick(skinCols), hair: pick(hairCols), helmet: Math.random() < 0.45 ? pick(helmCols) : 0, acc: pick([0, 0, 1, 2, 3]), shortSleeve: Math.random() < 0.4 });
+  var mateMark = null;
+  function makeBot(x, z, team, col) {
+    var h = makeHuman({ shirt: team === 0 ? 0x1e90ff : (col || pick(botCols)), vest: pick(vestCols), pants: pick(pantsCols), boots: 0x1c1a18, belt: 0x1c1a18, skin: pick(skinCols), hair: pick(hairCols), helmet: Math.random() < 0.45 ? pick(helmCols) : 0, acc: pick([0, 0, 1, 2, 3]), shortSleeve: Math.random() < 0.4 });
     var g = h.g; g.position.set(x, 0, z); scene.add(g);
-    var b = { g: g, rig: h, x: x, z: z, hp: 100, alive: true, tx: x, tz: z, tT: 0, shootT: rnd(0.5, 1.5), losT: rnd(0, 0.3), target: null, los: false, strafe: 1, st: 0, face: 0 };
+    var b = { team: team || 0, g: g, rig: h, x: x, z: z, hp: 100, alive: true, tx: x, tz: z, tT: 0, shootT: rnd(0.5, 1.5), losT: rnd(0, 0.3), target: null, los: false, strafe: 1, st: 0, face: 0 };
     for (var i = 0; i < h.meshes.length; i++) h.meshes[i].m.userData = { bot: b, part: h.meshes[i].head ? 'head' : 'body' };
     b.parts = h.meshes.map(function (e) { return e.m; });
+    if (b.team === 0) {
+      if (!mateMark) { mateMark = { geo: new THREE.OctahedronGeometry(0.22, 0), mat: new THREE.MeshBasicMaterial({ color: 0x35c8ff, depthTest: false, fog: false }) }; }
+      var mk = new THREE.Mesh(mateMark.geo, mateMark.mat); mk.position.y = 2.35; mk.scale.y = 1.4; mk.renderOrder = 20; g.add(mk); b.mark = mk;
+    }
     return b;
   }
 
@@ -698,6 +704,10 @@ body.touch #runBtn { display:flex; }
   }
   function toast(t) { var el = $('toast'); el.textContent = t; el.style.opacity = 1; toastT = 1.4; }
 
+  function enemiesLeft() { var n = 0; for (var i = 0; i < bots.length; i++) if (bots[i].alive && bots[i].team !== 0) n++; return n; }
+  function matesLeft() { var n = 0; for (var i = 0; i < bots.length; i++) if (bots[i].alive && bots[i].team === 0) n++; return n; }
+  function teamsLeft() { var seen = {}, n = player.alive || matesLeft() ? 1 : 0; for (var i = 0; i < bots.length; i++) if (bots[i].alive && bots[i].team !== 0 && !seen[bots[i].team]) { seen[bots[i].team] = 1; n++; } return n; }
+  function squadLead(b) { var sq = b.sq; if (!sq) return null; for (var i = 0; i < sq.length; i++) if (sq[i].alive) return sq[i]; return null; }
   function aliveCount() { var n = player.alive ? 1 : 0; for (var i = 0; i < bots.length; i++) if (bots[i].alive) n++; return n; }
 
   // ---------- हथियार, बैग और लूट ----------
@@ -1044,7 +1054,7 @@ body.touch #runBtn { display:flex; }
     v.m.rotation.z = v.lean;
     if (Math.abs(v.sp) > 6) {
       for (var i = 0; i < bots.length; i++) {
-        var b = bots[i]; if (!b.alive) continue;
+        var b = bots[i]; if (!b.alive || b.team === 0) continue;
         var dx = b.x - v.x, dz = b.z - v.z;
         if (dx * dx + dz * dz < (T.r + 0.6) * (T.r + 0.6)) { b.hp -= 100; hitT = 0.2; sfx('head'); if (b.hp <= 0) killBot(b, player); }
       }
@@ -1065,7 +1075,8 @@ body.touch #runBtn { display:flex; }
     if (!b.alive) return;
     b.alive = false; scene.remove(b.g); dropLoot(b);
     if (killer === player) { kills++; toast('+1 किल'); sfx('kill'); }
-    if (player.alive && aliveCount() === 1) endGame(true);
+    else if (b.team === 0 && player.alive) toast('साथी आउट हो गया');
+    if (player.alive && enemiesLeft() === 0) endGame(true);
   }
   function damagePlayer(d, quiet) {
     if (!player.alive || state !== 'play') return;
@@ -1086,9 +1097,9 @@ body.touch #runBtn { display:flex; }
   }
   function findTarget(b) {
     var best = null, bd = 50;
-    if (player.alive) { var dp = Math.hypot(player.x - b.x, player.z - b.z); if (dp < bd) { bd = dp; best = player; } }
+    if (player.alive && b.team !== 0) { var dp = Math.hypot(player.x - b.x, player.z - b.z); if (dp < bd) { bd = dp; best = player; } }
     for (var i = 0; i < bots.length; i++) {
-      var o = bots[i]; if (o === b || !o.alive) continue;
+      var o = bots[i]; if (o === b || !o.alive || o.team === b.team) continue;
       var d = Math.hypot(o.x - b.x, o.z - b.z); if (d < bd) { bd = d; best = o; }
     }
     b.target = best; b.los = best ? ((best === player && player.fy > 1.5) ? Math.hypot(player.x - b.x, player.z - b.z) < 12 : hasLOS(b, best)) : false;
@@ -1109,7 +1120,16 @@ body.touch #runBtn { display:flex; }
     if (Math.hypot(b.x, b.z) > zoneR) { b.hp -= 3 * dt; if (b.hp <= 0) { killBot(b, null); return; } }
     b.losT -= dt; if (b.losT <= 0) { b.losT = 0.35; findTarget(b); }
     if (b.target && !b.target.alive && b.target !== player) b.target = null;
-    var speed = 4.2, mx = 0, mz = 0;
+    var speed = 4.2, mx = 0, mz = 0, fol = null, fo = 0;
+    if (b.team === 0) {
+      var pd0 = Math.hypot(player.x - b.x, player.z - b.z);
+      if (player.alive && pd0 > 70) { var sa = rnd(0, 6.283); b.x = player.x + Math.cos(sa) * 4; b.z = player.z + Math.sin(sa) * 4; resolve(b, 0.5); pd0 = 4; }
+      if (player.alive && pd0 > 40) b.target = null;
+      if (player.alive) { fol = player; fo = pd0; }
+    } else if (b.sq) {
+      var ld = squadLead(b);
+      if (ld && ld !== b) { fol = ld; fo = Math.hypot(ld.x - b.x, ld.z - b.z); if (fo > 60) { b.x = ld.x + rnd(-3, 3); b.z = ld.z + rnd(-3, 3); resolve(b, 0.5); fo = 4; } }
+    }
     if (b.target) {
       var t = b.target, dx = t.x - b.x, dz = t.z - b.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
       b.face = Math.atan2(dx, dz);
@@ -1118,6 +1138,12 @@ body.touch #runBtn { display:flex; }
       mx += -dz / d * 0.6 * b.strafe; mz += dx / d * 0.6 * b.strafe;
       b.shootT -= dt;
       if (b.los && b.shootT <= 0) { b.shootT = 0.8 + Math.random() * 0.8; botShoot(b, t, d); }
+    } else if (fol && (b.team === 0 || fo > 7)) {
+      var fa = (b.idx || 0) * 2.1 + 0.6, fx = fol.x + Math.cos(fa) * 3.2, fz = fol.z + Math.sin(fa) * 3.2;
+      var gx = fx - b.x, gz = fz - b.z, gd = Math.sqrt(gx * gx + gz * gz) || 1;
+      if (gd > 2.2) { mx = gx / gd; mz = gz / gd; if (gd > 14) speed = 8.5; else if (gd > 6) speed = 6; b.face = Math.atan2(mx, mz); }
+      else { b.face = fol === player ? player.yaw : fol.face; }
+      b.tx = b.x; b.tz = b.z;
     } else {
       b.tT -= dt;
       var outside = Math.hypot(b.x, b.z) > zoneR * 0.9;
@@ -1170,7 +1196,7 @@ body.touch #runBtn { display:flex; }
     var sp = (scoped ? w.spread * 0.25 : w.spread) * [1, 0.7, 0.5][stance] * (air ? 2 : 1);
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
-    for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push.apply(list, bots[i].parts);
+    for (var i = 0; i < bots.length; i++) if (bots[i].alive && bots[i].team !== 0) list.push.apply(list, bots[i].parts);
     var hits = rc.intersectObjects(list, false);
     camera.updateMatrixWorld(true); pm.updateMatrixWorld(true);
     var org = (tpp && !scoped) ? pm.localToWorld(new THREE.Vector3(0, 1.36, 0.95)) : gun.localToWorld(new THREE.Vector3(0, 0, -0.4));
@@ -1312,7 +1338,13 @@ body.touch #runBtn { display:flex; }
     bots = []; clearBullets();
     var sp = freeSpot(200, 280);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 49; k++) { var s = freeSpot(8, 290, player, 60); bots.push(makeBot(s.x, s.z)); }
+    function nearSpot(cx, cz) { for (var q = 0; q < 12; q++) { var ax = cx + rnd(-4, 4), az = cz + rnd(-4, 4); if (!blocked(ax, az, 1.0)) return { x: ax, z: az }; } return { x: cx, z: cz }; }
+    var mates = [];
+    for (var m = 0; m < 3; m++) { var ms = nearSpot(player.x, player.z); var mb = makeBot(ms.x, ms.z, 0); mb.idx = m; mb.sq = mates; mates.push(mb); bots.push(mb); }
+    for (var tm = 1; tm <= 11; tm++) {
+      var cs = freeSpot(12, 285, player, 70), sq = [], sc = pick(botCols);
+      for (var k = 0; k < 4; k++) { var ps = nearSpot(cs.x, cs.z); var eb = makeBot(ps.x, ps.z, tm, sc); eb.idx = k; eb.sq = sq; sq.push(eb); bots.push(eb); }
+    }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
     toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; eyeH = 1.65; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
@@ -1324,7 +1356,7 @@ body.touch #runBtn { display:flex; }
     setScope(false); toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; if (drive) { drive.sp = 0; drive = null; } driveUI(false); carShown = ''; $('carBtn').hidden = true; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true;
     vault = null; vaultY = 0; vaultShown = false; $('vaultBtn').hidden = true; state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
     if (document.exitPointerLock) { try { document.exitPointerLock(); } catch (e) {} }
-    $('ovTitle').textContent = win ? 'जीत गए! आख़िरी खिलाड़ी आप हैं' : 'आप आउट हो गए';
+    $('ovTitle').textContent = win ? 'जीत गए! आपकी टीम आख़िरी बची' : 'आप आउट हो गए';
     $('ovText').textContent = 'किल: ' + kills + ' · समय: ' + Math.floor(matchT) + ' सेकंड';
     $('startBtn').textContent = 'फिर से खेलें';
     $('overlay').hidden = false;
@@ -1425,13 +1457,13 @@ body.touch #runBtn { display:flex; }
   }
   game.addEventListener('touchend', touchEnd); game.addEventListener('touchcancel', touchEnd);
 
-  var lastTxt = '', ringT = 0, lastRing = false, lastHot = false;
+  var lastTeam = '', lastTxt = '', ringT = 0, lastRing = false, lastHot = false;
   var avV = new THREE.Vector3(), aoV = new THREE.Vector3(), adV = new THREE.Vector3();
   /* निशान के गोल घेरे के अंदर कोई दुश्मन (बिना दीवार के बीच में) है या नहीं */
   function aimHot() {
     var cw = game.clientWidth / 2, ch = game.clientHeight / 2, R = 26 * (1 + kick * 5);
     for (var i = 0; i < bots.length; i++) {
-      var b = bots[i]; if (!b.alive) continue;
+      var b = bots[i]; if (!b.alive || b.team === 0) continue;
       var dx = b.x - camera.position.x, dz = b.z - camera.position.z; if (dx * dx + dz * dz > 8100) continue;
       avV.set(b.x, 1.1, b.z).project(camera);
       if (avV.z > 1 || avV.z < -1) continue;
@@ -1502,6 +1534,7 @@ body.touch #runBtn { display:flex; }
 
     var txt = 'बचे: ' + aliveCount() + ' · किल: ' + kills + ' · किट: ' + meds;
     if (txt !== lastTxt) { $('statTxt').textContent = txt; lastTxt = txt; }
+    var tt = 'टीम: ' + teamsLeft() + ' · साथी: ' + matesLeft() + '/3'; if (tt !== lastTeam) { $('teamTxt').textContent = tt; lastTeam = tt; }
     $('hpBar').style.width = Math.max(0, player.hp) + '%';
     $('arBar').style.width = armor * 2 + '%';
     if (drive) $('ammo').textContent = VEH[drive.type].n + ' · ' + Math.round(Math.abs(drive.sp) * 3.6) + ' किमी/घं';
