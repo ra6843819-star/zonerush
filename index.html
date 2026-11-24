@@ -152,7 +152,7 @@ body.touch #runBtn { display:flex; }
     <p id="ovText">48 खिलाड़ी, 12 टीमें — आपकी टीम में 4 लोग (3 साथी नीले रंग के, सिर के ऊपर नीला निशान)। सिकुड़ते लाल ज़ोन में रहिए और आख़िरी टीम बनिए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 27 · 4 लोगों की टीम (साथी बॉट)</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 28 · बहुत बड़ा नक्शा: नदियाँ, पुल, सड़कें</p>
   </div>
 </div>
 
@@ -170,7 +170,7 @@ body.touch #runBtn { display:flex; }
     $('startBtn').hidden = true; return;
   }
 
-  var WORLD_R = 300, ZONE0 = 292;
+  var WORLD_R = 450, ZONE0 = 442;
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec9e8);
   scene.fog = new THREE.Fog(0x9ec9e8, 45, 170);
@@ -237,7 +237,7 @@ body.touch #runBtn { display:flex; }
         big.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
         big.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(nor), 3));
         big.computeBoundingSphere();
-        outs.push({ mesh: new THREE.Mesh(big, gr.mat), gr: gr });
+        var nm = new THREE.Mesh(big, gr.mat); nm.matrixAutoUpdate = false; outs.push({ mesh: nm, gr: gr });
       }
     } catch (e) { for (i = 0; i < list.length; i++) scene.add(list[i]); return; }
     for (i = 0; i < outs.length; i++) {
@@ -413,31 +413,106 @@ body.touch #runBtn { display:flex; }
     var made = scene.children.splice(startIdx, scene.children.length - startIdx);
     mergeStatic(made);
   }
+
+  /* नदियाँ, सड़कें, पुल, पानी की टंकी, पेट्रोल पंप, पत्थर */
+  var RIV_A = { c: -170, w: 16 }, RIV_B = { c: 190, w: 14 };
+  var BR_A = [-155, -30, 155], BR_B = [-130, 60, 130], BR_W = 10;
+  function onRoad(x, z, pad) { return Math.abs(z + 30) < 4.5 + pad || Math.abs(x - 60) < 4.5 + pad || Math.abs(Math.hypot(x, z) - 230) < 4.5 + pad; }
+  (function () {
+    function lm2(c, dbl) { return new THREE.MeshLambertMaterial({ color: c, side: dbl ? THREE.DoubleSide : THREE.FrontSide }); }
+    var asph = lm2(0x3b3e44), line = lm2(0xe8c547), sand = lm2(0xd9c48a), water = lm2(0x2f7fc4), wood = lm2(0x7a5230);
+    function flat(mat, w, h, d, x, y, z) { var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); scene.add(m); return m; }
+    flat(asph, 920, 0.05, 9, 0, 0.025, -30); flat(line, 920, 0.02, 0.3, 0, 0.06, -30);
+    flat(asph, 9, 0.05, 920, 60, 0.025, 0); flat(line, 0.3, 0.02, 920, 60, 0.06, 0);
+    var ring = new THREE.Mesh(new THREE.RingGeometry(226, 234, 90), lm2(0x3b3e44, true)); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; scene.add(ring);
+    function river(vert, R, br) {
+      var L = 940, len = L, mid = 0;
+      if (vert) { flat(sand, R.w + 6, 0.03, L, R.c, 0.015, 0); flat(water, R.w, 0.08, L, R.c, 0.04, 0); }
+      else { flat(sand, L, 0.03, R.w + 6, 0, 0.015, R.c); flat(water, L, 0.08, R.w, 0, 0.04, R.c); }
+      var a = -470, i;
+      for (i = 0; i <= br.length; i++) {
+        var b = i < br.length ? br[i] - BR_W / 2 : 470;
+        if (b - a > 0.5) { if (vert) obstacles.push({ x0: R.c - R.w / 2, x1: R.c + R.w / 2, z0: a, z1: b }); else obstacles.push({ x0: a, x1: b, z0: R.c - R.w / 2, z1: R.c + R.w / 2 }); }
+        if (i < br.length) {
+          var bc = br[i], l2 = R.w + 5;
+          if (vert) { flat(wood, l2, 0.07, BR_W, R.c, 0.11, bc); flat(wood, l2, 0.9, 0.18, R.c, 0.55, bc - BR_W / 2 + 0.1); flat(wood, l2, 0.9, 0.18, R.c, 0.55, bc + BR_W / 2 - 0.1); }
+          else { flat(wood, BR_W, 0.07, l2, bc, 0.11, R.c); flat(wood, 0.18, 0.9, l2, bc - BR_W / 2 + 0.1, 0.55, R.c); flat(wood, 0.18, 0.9, l2, bc + BR_W / 2 - 0.1, 0.55, R.c); }
+          a = br[i] + BR_W / 2;
+        }
+      }
+    }
+    river(true, RIV_A, BR_A); river(false, RIV_B, BR_B);
+    var s1 = scene.children.length, i, g, x, z;
+    for (i = 0; i < 5; i++) {
+      for (g = 0; g < 40; g++) { x = rnd(-400, 400); z = rnd(-400, 400); if (Math.hypot(x, z) < 420 && !onRoad(x, z, 8) && !blocked(x, z, 8)) break; }
+      if (g >= 40) continue;
+      var lg = [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]];
+      for (var q = 0; q < 4; q++) addBox(x + lg[q][0], z + lg[q][1], 0.5, 8, 0.5, 0x6b6f75);
+      var tk = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 3.4, 10), new THREE.MeshLambertMaterial({ color: 0xb8553a })); tk.position.set(x, 9.7, z); scene.add(tk);
+      var tr = new THREE.Mesh(new THREE.ConeGeometry(3.6, 1.6, 10), new THREE.MeshLambertMaterial({ color: 0x4f5d6b })); tr.position.set(x, 12.2, z); scene.add(tr);
+    }
+    var pumps = [[-300, -46], [240, -46], [76, -260], [76, 300], [-60, -46], [150, 250]];
+    for (i = 0; i < pumps.length; i++) {
+      x = pumps[i][0]; z = pumps[i][1]; if (blocked(x, z, 6)) continue;
+      var cn = new THREE.Mesh(new THREE.BoxGeometry(9, 0.35, 6), new THREE.MeshLambertMaterial({ color: i % 2 ? 0xd13b2f : 0x2d7bd1 })); cn.position.set(x, 4.3, z); scene.add(cn);
+      addBox(x - 4, z - 2.6, 0.4, 4.2, 0.4, 0xeeeeee); addBox(x + 4, z - 2.6, 0.4, 4.2, 0.4, 0xeeeeee); addBox(x - 4, z + 2.6, 0.4, 4.2, 0.4, 0xeeeeee); addBox(x + 4, z + 2.6, 0.4, 4.2, 0.4, 0xeeeeee);
+      addBox(x - 1.5, z, 0.8, 1.5, 0.6, 0xd9d9d9); addBox(x + 1.5, z, 0.8, 1.5, 0.6, 0xd9d9d9);
+    }
+    var rc3 = [0x8a8d91, 0x777a7e, 0x9a9690];
+    for (i = 0; i < 80; i++) {
+      for (g = 0; g < 20; g++) { x = rnd(-435, 435); z = rnd(-435, 435); if (Math.hypot(x, z) < 435 && !onRoad(x, z, 2) && !blocked(x, z, 3)) break; }
+      if (g >= 20) continue;
+      addBox(x, z, rnd(1.6, 3.6), rnd(1, 2.4), rnd(1.6, 3.4), pick(rc3));
+    }
+    var made2 = scene.children.splice(s1, scene.children.length - s1);
+    mergeStatic(made2);
+  })();
+  var VB = [0, 0];
+  function viaBridge(x, z, gx, gz) {
+    VB[0] = gx; VB[1] = gz;
+    var sa = x - RIV_A.c, sg = gx - RIV_A.c, i, bz, bd;
+    if (sa * sg < 0) {
+      bz = BR_A[0]; bd = 1e9; for (i = 0; i < BR_A.length; i++) if (Math.abs(z - BR_A[i]) < bd) { bd = Math.abs(z - BR_A[i]); bz = BR_A[i]; }
+      var sd = sa < 0 ? -1 : 1;
+      if (Math.abs(sa) > 10 && Math.abs(z - bz) > 3.5) { VB[0] = RIV_A.c + sd * 13; VB[1] = bz; } else { VB[0] = RIV_A.c - sd * 14; VB[1] = bz; }
+      return VB;
+    }
+    var sa2 = z - RIV_B.c, sg2 = gz - RIV_B.c;
+    if (sa2 * sg2 < 0) {
+      var bx = BR_B[0]; bd = 1e9; for (i = 0; i < BR_B.length; i++) if (Math.abs(x - BR_B[i]) < bd) { bd = Math.abs(x - BR_B[i]); bx = BR_B[i]; }
+      var sd2 = sa2 < 0 ? -1 : 1;
+      if (Math.abs(sa2) > 9 && Math.abs(x - bx) > 3.5) { VB[0] = bx; VB[1] = RIV_B.c + sd2 * 12; } else { VB[0] = bx; VB[1] = RIV_B.c - sd2 * 13; }
+    }
+    return VB;
+  }
   var placed = 0, guard = 0;
-  while (placed < 62 && guard++ < 4000) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 262;
+  while (placed < 120 && guard++ < 8000) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 425;
     var sr = Math.random(), sty = sr < 0.34 ? 'cottage' : (sr < 0.64 ? 'two' : (sr < 0.82 ? 'shop' : 'warehouse'));
     var bw, bd, wc, rc2;
     if (sty === 'cottage') { bw = rnd(13, 18); bd = rnd(11, 15); wc = pick(wallCols); rc2 = pick(roofCols); }
     else if (sty === 'two') { bw = rnd(14, 19); bd = rnd(12, 16); wc = pick(wallCols); rc2 = pick(roofCols); }
     else if (sty === 'shop') { bw = rnd(12, 16); bd = rnd(9, 12); wc = pick(shopCols); rc2 = pick(shopRoofCols); }
     else { bw = rnd(20, 28); bd = rnd(14, 20); wc = pick(whCols); rc2 = pick(whRoofCols); }
-    var bx = Math.cos(a) * r, bz = Math.sin(a) * r;
+    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, off = Math.max(bw, bd) * 0.5 + 9, rs = Math.random();
+    if (rs < 0.22) { bx = rnd(-400, 400); bz = -30 + (Math.random() < 0.5 ? -off : off); }
+    else if (rs < 0.40) { bz = rnd(-400, 400); bx = 60 + (Math.random() < 0.5 ? -off : off); }
+    if (Math.hypot(bx, bz) > 428 || onRoad(bx, bz, Math.max(bw, bd) * 0.5 + 1.5)) continue;
     if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
     addBuilding(bx, bz, bw, bd, Math.floor(Math.random() * 4), wc, rc2, sty); placed++;
   }
   placed = 0; guard = 0;
-  while (placed < 75 && guard++ < 1500) {
-    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 282, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
-    if (blocked(cx, cz, 3)) continue;
+  while (placed < 150 && guard++ < 3000) {
+    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 430, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
+    if (onRoad(cx, cz, 1.5) || blocked(cx, cz, 3)) continue;
     addBox(cx, cz, 2, 1.4, 2, 0x8a5a2b); placed++;
   }
   var trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2b }), leafMat = new THREE.MeshLambertMaterial({ color: 0x2f7a3c });
   placed = 0; guard = 0;
   var treeStart = scene.children.length;
-  while (placed < 210 && guard++ < 2200) {
-    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 292, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
-    if (blocked(tx, tz, 2)) continue;
+  while (placed < 430 && guard++ < 4500) {
+    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 440, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
+    if (onRoad(tx, tz, 1.5) || blocked(tx, tz, 2)) continue;
     var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 6), trunkMat);
     trunk.position.set(tx, 1.5, tz); scene.add(trunk); obsMeshes.push(trunk);
     obstacles.push({ x0: tx - 0.4, x1: tx + 0.4, z0: tz - 0.4, z1: tz + 0.4 });
@@ -487,7 +562,7 @@ body.touch #runBtn { display:flex; }
   function freeSpot(minR, maxR, awayFrom, awayD) {
     var x = 0, z = 0;
     for (var i = 0; i < 60; i++) {
-      var a = rnd(0, 6.283), r = rnd(minR, maxR);
+      var a = rnd(0, 6.283), r = Math.sqrt(rnd(minR * minR, maxR * maxR));
       x = Math.cos(a) * r; z = Math.sin(a) * r;
       if (blocked(x, z, 1.5)) continue;
       if (awayFrom) { var dx = x - awayFrom.x, dz = z - awayFrom.z; if (dx * dx + dz * dz < awayD * awayD) continue; }
@@ -836,8 +911,8 @@ body.touch #runBtn { display:flex; }
         }
       }
     }
-    for (i = 0; i < 70; i++) {
-      s = freeSpot(6, 290);
+    for (i = 0; i < 140; i++) {
+      s = freeSpot(6, 440);
       if (blocked(s.x, s.z, 1.2)) continue;
       spawnLoot(pickLootType(), s.x, s.z);
     }
@@ -995,8 +1070,8 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 60; k++) {
       var x, z;
       if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
-      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 290); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
-      if (Math.hypot(x, z) > 292 || blocked(x, z, 3)) continue;
+      else { var a2 = rnd(0, 6.283), r2 = Math.sqrt(rnd(100, 440 * 440)); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 442 || blocked(x, z, 3)) continue;
       var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
       if (ok) return { x: x, z: z };
     }
@@ -1006,7 +1081,7 @@ body.touch #runBtn { display:flex; }
     clearVehicles();
     var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
     s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
-    for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
+    for (i = 0; i < types.length + 24; i++) { s = vehSpot(null); if (s) addVehicle(types[i % types.length], s.x, s.z, rnd(0, 6.28)); }
   }
   function nearVehicle() {
     var best = null, bd = 3.4 * 3.4;
@@ -1140,7 +1215,7 @@ body.touch #runBtn { display:flex; }
       if (b.los && b.shootT <= 0) { b.shootT = 0.8 + Math.random() * 0.8; botShoot(b, t, d); }
     } else if (fol && (b.team === 0 || fo > 7)) {
       var fa = (b.idx || 0) * 2.1 + 0.6, fx = fol.x + Math.cos(fa) * 3.2, fz = fol.z + Math.sin(fa) * 3.2;
-      var gx = fx - b.x, gz = fz - b.z, gd = Math.sqrt(gx * gx + gz * gz) || 1;
+      var ag2 = viaBridge(b.x, b.z, fx, fz), gx = ag2[0] - b.x, gz = ag2[1] - b.z, gd = Math.sqrt(gx * gx + gz * gz) || 1;
       if (gd > 2.2) { mx = gx / gd; mz = gz / gd; if (gd > 14) speed = 8.5; else if (gd > 6) speed = 6; b.face = Math.atan2(mx, mz); }
       else { b.face = fol === player ? player.yaw : fol.face; }
       b.tx = b.x; b.tz = b.z;
@@ -1151,7 +1226,7 @@ body.touch #runBtn { display:flex; }
       else if (b.tT <= 0 || Math.hypot(b.tx - b.x, b.tz - b.z) < 2) {
         var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * zoneR * 0.8; b.tx = Math.cos(a) * r; b.tz = Math.sin(a) * r; b.tT = rnd(6, 12);
       }
-      var ex = b.tx - b.x, ez = b.tz - b.z, ed = Math.sqrt(ex * ex + ez * ez) || 1;
+      var ag = viaBridge(b.x, b.z, b.tx, b.tz), ex = ag[0] - b.x, ez = ag[1] - b.z, ed = Math.sqrt(ex * ex + ez * ez) || 1;
       mx = ex / ed; mz = ez / ed; b.face = Math.atan2(mx, mz);
     }
     if (b.detT > 0) { b.detT -= dt; var dx2 = -mz * b.det, dz2 = mx * b.det; mx += dx2 * 1.4; mz += dz2 * 1.4; }
@@ -1161,7 +1236,7 @@ body.touch #runBtn { display:flex; }
     var want = Math.min(1, ml) * speed * dt, got = Math.sqrt((b.x - ox) * (b.x - ox) + (b.z - oz) * (b.z - oz));
     if (want > 0.001 && got < want * 0.4) {
       b.stuckT = (b.stuckT || 0) + dt;
-      if (b.stuckT > 0.35) { b.stuckT = 0; b.det = Math.random() < 0.5 ? -1 : 1; b.detT = 1.4; }
+      if (b.stuckT > 0.35) { b.stuckT = 0; b.det = Math.random() < 0.5 ? -1 : 1; b.detT = 1.4; if (!b.target && Math.random() < 0.3) b.tT = 0; }
     } else b.stuckT = 0;
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
     var dpl = Math.hypot(b.x - player.x, b.z - player.z), dv = dpl < 32;
@@ -1336,13 +1411,13 @@ body.touch #runBtn { display:flex; }
   function startMatch() {
     for (var i = 0; i < bots.length; i++) scene.remove(bots[i].g);
     bots = []; clearBullets();
-    var sp = freeSpot(200, 280);
+    var sp = freeSpot(300, 430);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
     function nearSpot(cx, cz) { for (var q = 0; q < 12; q++) { var ax = cx + rnd(-4, 4), az = cz + rnd(-4, 4); if (!blocked(ax, az, 1.0)) return { x: ax, z: az }; } return { x: cx, z: cz }; }
     var mates = [];
     for (var m = 0; m < 3; m++) { var ms = nearSpot(player.x, player.z); var mb = makeBot(ms.x, ms.z, 0); mb.idx = m; mb.sq = mates; mates.push(mb); bots.push(mb); }
     for (var tm = 1; tm <= 11; tm++) {
-      var cs = freeSpot(12, 285, player, 70), sq = [], sc = pick(botCols);
+      var cs = freeSpot(12, 435, player, 70), sq = [], sc = pick(botCols);
       for (var k = 0; k < 4; k++) { var ps = nearSpot(cs.x, cs.z); var eb = makeBot(ps.x, ps.z, tm, sc); eb.idx = k; eb.sq = sq; sq.push(eb); bots.push(eb); }
     }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
@@ -1476,7 +1551,7 @@ body.touch #runBtn { display:flex; }
   }
   function update(dt) {
     matchT += dt;
-    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 2.4);
+    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 3.0);
     zoneMesh.scale.set(zoneR, 1, zoneR);
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
