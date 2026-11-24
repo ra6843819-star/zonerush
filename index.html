@@ -147,7 +147,7 @@ body.touch #runBtn { display:flex; }
     <p id="ovText">50 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 24 · 50 खिलाड़ी, उछलना, झुकना, लेटना</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 25 · नए डिज़ाइन की इमारतें, दो मंज़िल, बड़ा नक़्शा</p>
   </div>
 </div>
 
@@ -158,14 +158,14 @@ body.touch #runBtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन (जोयस्टिक के ऊपर) एक बार दबाइए तो तेज़ दौड़ शुरू, जोयस्टिक छोड़ते ही वापस चलना · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · "उछलें" बटन से ऊपर कूदिए, "झुकें" और "लेटें" से छिपिए (धीमा चलना, निशाना पक्का, दुश्मन का निशाना कमज़ोर) · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: बाएँ ◀ ▶ से मोड़िए, दाएँ हरा बटन तेज़, लाल ब्रेक या पीछे, पीला हॉर्न; टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
+    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन (जोयस्टिक के ऊपर) एक बार दबाइए तो तेज़ दौड़ शुरू, जोयस्टिक छोड़ते ही वापस चलना · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · "उछलें" बटन से ऊपर कूदिए, "झुकें" और "लेटें" से छिपिए (धीमा चलना, निशाना पक्का, दुश्मन का निशाना कमज़ोर) · दो मंज़िला घरों में सीढ़ी से ऊपर चढ़िए, वहाँ बढ़िया सामान मिलता है · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: बाएँ ◀ ▶ से मोड़िए, दाएँ हरा बटन तेज़, लाल ब्रेक या पीछे, पीला हॉर्न; टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
     : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप (फिर दबाने पर और ज़ूम) · J: उछलना · C: झुकना · X: लेटना · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · गाड़ी में G: हॉर्न · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
   }
 
-  var WORLD_R = 232, ZONE0 = 226;
+  var WORLD_R = 300, ZONE0 = 292;
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec9e8);
   scene.fog = new THREE.Fog(0x9ec9e8, 45, 170);
@@ -183,14 +183,14 @@ body.touch #runBtn { display:flex; }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6c8a5a, 0.85));
   var sun = new THREE.DirectionalLight(0xfff2d6, 0.6); sun.position.set(40, 80, 20); scene.add(sun);
-  var ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(1300, 1300), new THREE.MeshLambertMaterial({ color: 0x5f9c4d }));
   ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
   var obstacles = [], obsMeshes = [];
   function addBox(x, z, w, h, d, color) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: color }));
     m.position.set(x, h / 2, z); scene.add(m);
-    obstacles.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2 });
+    obstacles.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, top: h });
     obsMeshes.push(m);
   }
   function rnd(a, b) { return a + Math.random() * (b - a); }
@@ -243,12 +243,37 @@ body.touch #runBtn { display:flex; }
       }
     }
   }
-  /* घर: चार दीवारें (एक में दरवाज़ा, बाक़ी में खिड़की), फ़र्श, छत और अंदर मेज़ */
-  function addHouse(cx, cz, w, d, doorSide, wcol, rcol) {
+  /* इमारतें: कॉटेज, दो मंज़िला घर (सीढ़ी के साथ), दुकान और गोदाम */
+  var platforms = [];
+  function lm(c) { return new THREE.MeshLambertMaterial({ color: c }); }
+  function supportY(x, z, fy) {
+    var best = 0;
+    for (var i = 0; i < platforms.length; i++) {
+      var p = platforms[i];
+      if (x < p.x0 || x > p.x1 || z < p.z0 || z > p.z1) continue;
+      var y = p.ramp ? p.y0 + (x - p.x0) / (p.x1 - p.x0) * (p.y1 - p.y0) : p.y;
+      if (y <= fy + 0.6 && y > best) best = y;
+    }
+    return best;
+  }
+  var shopCols = [0xf2c94c, 0x6fb7e9, 0xe97b7b, 0x9ad39a, 0xf0a35e];
+  var shopRoofCols = [0x4a4f57, 0x5a3b3b, 0x2f4a5e];
+  var whCols = [0x8f9aa3, 0x77838e, 0xb7a98f, 0x9aa89a];
+  var whRoofCols = [0x4f5d6b, 0x6b4a3a, 0x3d4a3f];
+  var signCols = [0xd83a3a, 0x2f8f4e, 0x2e6fd8, 0xe0a020, 0x8e44ad];
+  function addBuilding(cx, cz, w, d, doorSide, wcol, rcol, style) {
     var startIdx = scene.children.length;
-    var H = 3.2, t = 0.4, x0 = cx - w / 2, x1 = cx + w / 2, z0 = cz - d / 2, z1 = cz + d / 2;
+    var two = style === 'two', flat = style === 'shop' || style === 'warehouse' || (two && Math.random() < 0.4);
+    var H = style === 'warehouse' ? 4.4 : 3.2, t = 0.4, SL = 0.3;
+    var x0 = cx - w / 2, x1 = cx + w / 2, z0 = cz - d / 2, z1 = cz + d / 2;
     var wm = new THREE.MeshLambertMaterial({ color: wcol });
-    function run(axis, fixed, a, b, ops) {
+    var trimC = shade(wcol, 0.72), topY = two ? 2 * H + SL : H;
+    var winW = style === 'shop' ? 2.6 : (style === 'warehouse' ? 1.3 : 1.6), doorW = style === 'warehouse' ? 4.2 : 2.2, doorH = style === 'warehouse' ? 3.5 : 2.4;
+    var doorC = doorSide < 2 ? cx + rnd(-w / 6, w / 6) : cz + rnd(-d / 6, d / 6);
+    function deco(sx, sy, sz, col, px, py2, pz, rx) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), lm(col)); m.position.set(px, py2, pz); if (rx) m.rotation.x = rx; scene.add(m); return m;
+    }
+    function run(axis, fixed, a, b, ops, yb, ground) {
       ops.sort(function (p, q) { return p.c - q.c; });
       var cur = a;
       function seg(s, e, y0, y1, solid) {
@@ -256,73 +281,157 @@ body.touch #runBtn { display:flex; }
         var mid = (s + e) / 2, sx = axis === 'x' ? len : t, sz = axis === 'x' ? t : len;
         var px = axis === 'x' ? mid : fixed, pz = axis === 'x' ? fixed : mid;
         var m = new THREE.Mesh(new THREE.BoxGeometry(sx, h, sz), wm);
-        m.position.set(px, y0 + h / 2, pz); scene.add(m); obsMeshes.push(m);
-        if (solid) obstacles.push({ x0: px - sx / 2, x1: px + sx / 2, z0: pz - sz / 2, z1: pz + sz / 2 });
+        m.position.set(px, yb + y0 + h / 2, pz); scene.add(m); obsMeshes.push(m);
+        if (solid) obstacles.push({ x0: px - sx / 2, x1: px + sx / 2, z0: pz - sz / 2, z1: pz + sz / 2, bot: yb, top: (two && ground) ? H + SL : undefined });
       }
       for (var i = 0; i < ops.length; i++) {
         var o = ops[i], s = o.c - o.w / 2, e = o.c + o.w / 2;
         seg(cur, s, 0, H, true);
-        if (o.door) seg(s, e, 2.4, H, false);
-        else { seg(s, e, 0, 1.0, true); seg(s, e, 2.2, H, false); windows.push({ axis: axis, fixed: fixed, c: o.c }); frame(axis, fixed, o.c, o.w); }
+        if (o.door) seg(s, e, doorH, H, false);
+        else { seg(s, e, 0, 1.0, true); seg(s, e, 2.2, H, false); if (ground) { windows.push({ axis: axis, fixed: fixed, c: o.c }); frame(axis, fixed, o.c, o.w); } else frameUp(axis, fixed, o.c, o.w, yb); }
         cur = e;
       }
       seg(cur, b, 0, H, true);
     }
-    /* खिड़की के चारों तरफ़ पीला फ़्रेम: यह कूदने की जगह का निशान है */
+    /* ज़मीनी खिड़की के चारों तरफ़ पीला फ़्रेम: कूदने की जगह का निशान */
     function frame(axis, fixed, c, wd) {
       var th = t + 0.1, bar = 0.09, X = axis === 'x';
-      function box(sx, sy, sz, px, py, pz) { var m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), frameMat); m.position.set(px, py, pz); scene.add(m); }
+      function box(sx, sy, sz, px, py2, pz) { var m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), frameMat); m.position.set(px, py2, pz); scene.add(m); }
       box(X ? wd + 0.2 : th, bar, X ? th : wd + 0.2, X ? c : fixed, 1.0 + bar / 2, X ? fixed : c);
       box(X ? wd + 0.2 : th, bar, X ? th : wd + 0.2, X ? c : fixed, 2.2 - bar / 2, X ? fixed : c);
       box(X ? bar : th, 1.2, X ? th : bar, X ? c - wd / 2 - bar / 2 : fixed, 1.6, X ? fixed : c - wd / 2 - bar / 2);
       box(X ? bar : th, 1.2, X ? th : bar, X ? c + wd / 2 + bar / 2 : fixed, 1.6, X ? fixed : c + wd / 2 + bar / 2);
     }
-    function wallOps(side, mid, len) {
-      var ops = [], dc = null, n = Math.max(1, Math.floor(len / 5)), i2;
-      if (side === doorSide) { dc = mid + rnd(-len / 6, len / 6); ops.push({ c: dc, w: 2.2, door: true }); }
+    /* ऊपरी मंज़िल की खिड़की: सफ़ेद फ़्रेम और शीशा */
+    function frameUp(axis, fixed, c, wd, yb) {
+      var th = t + 0.08, X = axis === 'x';
+      var m = new THREE.Mesh(new THREE.BoxGeometry(X ? wd : th - 0.2, 1.2, X ? th - 0.2 : wd), lm(0x7fb4d6)); m.position.set(X ? c : fixed, yb + 1.6, X ? fixed : c); scene.add(m);
+      var sh = new THREE.Mesh(new THREE.BoxGeometry(X ? wd + 0.3 : th, 0.1, X ? th : wd + 0.3), lm(0xf4f1ea)); sh.position.set(X ? c : fixed, yb + 0.95, X ? fixed : c); scene.add(sh);
+    }
+    function wallOps(side, mid, len, ground) {
+      var ops = [], dc = null, n = Math.max(1, Math.floor(len / (style === 'warehouse' ? 9 : 5))), i2;
+      if (ground && side === doorSide) { dc = doorC; ops.push({ c: dc, w: doorW, door: true }); }
       for (i2 = 0; i2 < n; i2++) {
         var c2 = mid - len / 2 + (i2 + 0.5) * len / n;
-        if (dc !== null && Math.abs(c2 - dc) < 3.2) continue;
-        ops.push({ c: c2, w: 1.6 });
+        if (dc !== null && Math.abs(c2 - dc) < doorW / 2 + winW / 2 + 1) continue;
+        ops.push({ c: c2, w: winW });
       }
       return ops;
     }
-    run('x', z0, x0 - t / 2, x1 + t / 2, wallOps(0, cx, w));
-    run('x', z1, x0 - t / 2, x1 + t / 2, wallOps(1, cx, w));
-    run('z', x0, z0 + t / 2, z1 - t / 2, wallOps(2, cz, d));
-    run('z', x1, z0 + t / 2, z1 - t / 2, wallOps(3, cz, d));
-    var fl = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), new THREE.MeshLambertMaterial({ color: 0x7a6048 }));
+    function walls(yb, ground) {
+      run('x', z0, x0 - t / 2, x1 + t / 2, wallOps(0, cx, w, ground), yb, ground);
+      run('x', z1, x0 - t / 2, x1 + t / 2, wallOps(1, cx, w, ground), yb, ground);
+      run('z', x0, z0 + t / 2, z1 - t / 2, wallOps(2, cz, d, ground), yb, ground);
+      run('z', x1, z0 + t / 2, z1 - t / 2, wallOps(3, cz, d, ground), yb, ground);
+    }
+    walls(0, true);
+    var floorCols = [0x7a6048, 0x8a7a64, 0x6b5a48, 0x9a8a74];
+    var fl = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), new THREE.MeshLambertMaterial({ color: pick(floorCols) }));
     fl.position.set(cx, 0.02, cz); scene.add(fl);
+    var hinfo = { x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2, floors: 1, style: style };
+    if (two) {
+      walls(H + SL, false);
+      var xi0 = x0 + t / 2 + 0.05, xi1 = xi0 + 7.6, zl0 = z0 + t / 2, zl1 = zl0 + 2.0, rise = H + SL, ix0 = x0 + t / 2, ix1 = x1 - t / 2, iz1 = z1 - t / 2;
+      var slabM = new THREE.MeshLambertMaterial({ color: 0x8a7a64 });
+      var slab = function (ax0, ax1, az0, az1) {
+        var m = new THREE.Mesh(new THREE.BoxGeometry(ax1 - ax0, SL, az1 - az0), slabM); m.position.set((ax0 + ax1) / 2, H + SL / 2, (az0 + az1) / 2); scene.add(m); obsMeshes.push(m);
+        platforms.push({ x0: ax0, x1: ax1, z0: az0, z1: az1, y: H + SL });
+      };
+      slab(ix0, ix1, zl1, iz1);
+      slab(xi1, ix1, zl0, zl1);
+      // सीढ़ी: ढलान + दिखने वाली सीढ़ियाँ + रेलिंग
+      platforms.push({ x0: xi0, x1: xi1, z0: zl0, z1: zl1, ramp: true, y0: 0, y1: rise });
+      var nst = 14, len = xi1 - xi0;
+      for (var si = 0; si < nst; si++) {
+        var sh2 = rise * (si + 0.6) / nst;
+        deco(len / nst, sh2, zl1 - zl0 - 0.1, 0xb9a98c, xi0 + (si + 0.5) * len / nst, sh2 / 2, (zl0 + zl1) / 2);
+      }
+      obstacles.push({ x0: xi0 + 1.0, x1: xi1, z0: zl1, z1: zl1 + 0.14, bot: undefined, top: H + SL });
+      var rmx = (xi0 + 1.0 + xi1) / 2, rl = deco(len - 1.0, 0.08, 0.1, 0x6b4a2b, rmx, rise * (rmx - xi0) / len + 0.95, zl1 + 0.07, 0); rl.rotation.z = Math.atan2(rise, len);
+      // ऊपरी मंज़िल पर रखे डिब्बे
+      for (var uc = 0; uc < 2; uc++) {
+        var ux = rnd(ix0 + 2, ix1 - 2), uz = rnd(zl1 + 2, iz1 - 2), uw = rnd(1, 1.6), uh = rnd(0.8, 1.1);
+        var um = new THREE.Mesh(new THREE.BoxGeometry(uw, uh, uw), lm(0x7a5230)); um.position.set(ux, H + SL + uh / 2, uz); scene.add(um); obsMeshes.push(um);
+        obstacles.push({ x0: ux - uw / 2, x1: ux + uw / 2, z0: uz - uw / 2, z1: uz + uw / 2, bot: H + SL, top: H + SL + uh });
+      }
+      hinfo.floors = 2; hinfo.upY = H + SL;
+      hinfo.regA = { x0: ix0 + 0.8, x1: ix1 - 0.8, z0: zl1 + 0.8, z1: iz1 - 0.8 };
+      hinfo.regB = { x0: xi1 + 0.8, x1: ix1 - 0.8, z0: zl0 + 0.5, z1: zl1 - 0.3 };
+      deco(w + 0.3, SL + 0.12, d + 0.3, trimC, cx, H + SL / 2, cz);   // बीच की पट्टी
+    }
     var ce = new THREE.Mesh(new THREE.BoxGeometry(w + t, 0.15, d + t), new THREE.MeshLambertMaterial({ color: 0x6b5a48 }));
-    ce.position.set(cx, H + 0.075, cz); scene.add(ce);
-    var roofH = 1.9 + Math.max(0, w - 10) * 0.12;
-    var rg = new THREE.ConeGeometry((w / 2 + 0.6) * 1.4142, roofH, 4); rg.rotateY(Math.PI / 4);
-    var roof = new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ color: rcol }));
-    roof.scale.z = (d / 2 + 0.6) / (w / 2 + 0.6); roof.position.set(cx, H + roofH / 2, cz); scene.add(roof); obsMeshes.push(roof);
-    var nc = 2 + Math.floor(w * d / 90);
-    for (var ci = 0; ci < nc; ci++) addBox(rnd(x0 + 2.8, x1 - 2.8), rnd(z0 + 2.8, z1 - 2.8), rnd(1, 1.8), rnd(0.8, 1.2), rnd(0.8, 1.2), 0x7a5230);
-    houses.push({ x0: x0 - t / 2, x1: x1 + t / 2, z0: z0 - t / 2, z1: z1 + t / 2 });
+    ce.position.set(cx, topY + 0.075, cz); scene.add(ce);
+    if (flat) {
+      var rs = new THREE.Mesh(new THREE.BoxGeometry(w + 0.7, 0.3, d + 0.7), lm(rcol)); rs.position.set(cx, topY + 0.3, cz); scene.add(rs); obsMeshes.push(rs);
+      var pc = shade(rcol, 1.25);
+      deco(w + 0.7, 0.6, 0.25, pc, cx, topY + 0.75, z0 - 0.3); deco(w + 0.7, 0.6, 0.25, pc, cx, topY + 0.75, z1 + 0.3);
+      deco(0.25, 0.6, d + 0.7, pc, x0 - 0.3, topY + 0.75, cz); deco(0.25, 0.6, d + 0.7, pc, x1 + 0.3, topY + 0.75, cz);
+      deco(1.2, 0.9, 1.2, 0x9aa5ae, x0 + w * 0.25, topY + 0.9, z0 + d * 0.3);   // पानी की टंकी / वेंट
+      deco(0.9, 0.7, 0.9, 0x9aa5ae, x1 - w * 0.2, topY + 0.8, z1 - d * 0.3);
+    } else {
+      var roofH = 1.9 + Math.max(0, w - 10) * 0.12;
+      var rg = new THREE.ConeGeometry((w / 2 + 0.6) * 1.4142, roofH, 4); rg.rotateY(Math.PI / 4);
+      var roof = new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ color: rcol }));
+      roof.scale.z = (d / 2 + 0.6) / (w / 2 + 0.6); roof.position.set(cx, topY + roofH / 2, cz); scene.add(roof); obsMeshes.push(roof);
+      deco(0.7, 1.8, 0.7, 0x8a4b3a, cx + w * 0.22, topY + roofH * 0.55, cz + d * 0.1);    // चिमनी
+      deco(0.9, 0.15, 0.9, 0x6b3a2c, cx + w * 0.22, topY + roofH * 0.55 + 0.95, cz + d * 0.1);
+    }
+    // सजावट: नींव, कोनों के खंभे
+    deco(w + 0.3, 0.35, d + 0.3, shade(wcol, 0.55), cx, 0.17, cz);
+    var pil = shade(wcol, 1.18), cxs = [x0 - t / 2, x1 + t / 2], czs = [z0 - t / 2, z1 + t / 2];
+    for (var a1 = 0; a1 < 2; a1++) for (var b1 = 0; b1 < 2; b1++) deco(0.55, topY, 0.55, pil, cxs[a1], topY / 2, czs[b1]);
+    // दरवाज़े के बाहर बरामदा / शामियाना
+    var vert = doorSide < 2, dsx = doorSide === 0 ? -1 : (doorSide === 1 ? 1 : (doorSide === 2 ? -1 : 1));
+    var wallPos = doorSide === 0 ? z0 : (doorSide === 1 ? z1 : (doorSide === 2 ? x0 : x1));
+    var aw = style === 'warehouse' ? 5.4 : 3.6, adp = 1.9;
+    if (style === 'shop') {
+      for (var sti = 0; sti < 6; sti++) {
+        var off = -aw / 2 + (sti + 0.5) * aw / 6, sc = sti % 2 ? 0xf4f4f0 : pick(signCols);
+        var sx2 = vert ? aw / 6 : adp, sz2 = vert ? adp : aw / 6;
+        var mm = deco(sx2, 0.1, sz2, sc, vert ? doorC + off : wallPos + dsx * adp / 2, 2.75, vert ? wallPos + dsx * adp / 2 : doorC + off, 0);
+        if (vert) mm.rotation.x = dsx * 0.22; else mm.rotation.z = -dsx * 0.22;
+      }
+      var sgc = pick(signCols);
+      if (vert) deco(aw + 1, 0.8, 0.2, sgc, doorC, H + 0.5 + 0.3, wallPos + dsx * 0.15); else deco(0.2, 0.8, aw + 1, sgc, wallPos + dsx * 0.15, H + 0.5 + 0.3, doorC);
+    } else if (style === 'warehouse') {
+      if (vert) deco(aw + 0.6, 0.5, 0.35, 0x2a2f38, doorC, doorH + 0.3, wallPos + dsx * 0.1); else deco(0.35, 0.5, aw + 0.6, 0x2a2f38, wallPos + dsx * 0.1, doorH + 0.3, doorC);
+      for (var st = 0; st < 5; st++) { var so = -w / 2 + (st + 0.5) * w / 5; deco(0.3, H - 0.4, 0.12, shade(wcol, 1.2), cx + so, H / 2, z0 - t / 2 - 0.05); }
+    } else {
+      var pw = 3.4, pc2 = shade(rcol, 1.1);
+      if (vert) { deco(pw, 0.14, adp, pc2, doorC, 2.7, wallPos + dsx * adp / 2); deco(0.16, 2.7, 0.16, 0xe9e3d5, doorC - pw / 2 + 0.1, 1.35, wallPos + dsx * (adp - 0.1)); deco(0.16, 2.7, 0.16, 0xe9e3d5, doorC + pw / 2 - 0.1, 1.35, wallPos + dsx * (adp - 0.1)); }
+      else { deco(adp, 0.14, pw, pc2, wallPos + dsx * adp / 2, 2.7, doorC); deco(0.16, 2.7, 0.16, 0xe9e3d5, wallPos + dsx * (adp - 0.1), 1.35, doorC - pw / 2 + 0.1); deco(0.16, 2.7, 0.16, 0xe9e3d5, wallPos + dsx * (adp - 0.1), 1.35, doorC + pw / 2 - 0.1); }
+    }
+    // अंदर के डिब्बे (ज़मीनी मंज़िल)
+    var nc = Math.min(9, 2 + Math.floor(w * d / 90)), lowZ = two ? z0 + 3.0 : z0 + 2.8;
+    for (var ci = 0; ci < nc; ci++) addBox(rnd(x0 + 2.8, x1 - 2.8), rnd(lowZ, z1 - 2.8), rnd(1, 1.8), rnd(0.8, 1.2), rnd(0.8, 1.2), style === 'warehouse' ? 0x9a6a2b : 0x7a5230);
+    houses.push(hinfo);
     var made = scene.children.splice(startIdx, scene.children.length - startIdx);
     mergeStatic(made);
   }
   var placed = 0, guard = 0;
-  while (placed < 48 && guard++ < 3000) {
-    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 196;
-    var bx = Math.cos(a) * r, bz = Math.sin(a) * r, bw = rnd(13, 20), bd = rnd(11, 16);
+  while (placed < 62 && guard++ < 4000) {
+    var a = rnd(0, 6.283), r = Math.sqrt(Math.random()) * 262;
+    var sr = Math.random(), sty = sr < 0.34 ? 'cottage' : (sr < 0.64 ? 'two' : (sr < 0.82 ? 'shop' : 'warehouse'));
+    var bw, bd, wc, rc2;
+    if (sty === 'cottage') { bw = rnd(13, 18); bd = rnd(11, 15); wc = pick(wallCols); rc2 = pick(roofCols); }
+    else if (sty === 'two') { bw = rnd(14, 19); bd = rnd(12, 16); wc = pick(wallCols); rc2 = pick(roofCols); }
+    else if (sty === 'shop') { bw = rnd(12, 16); bd = rnd(9, 12); wc = pick(shopCols); rc2 = pick(shopRoofCols); }
+    else { bw = rnd(20, 28); bd = rnd(14, 20); wc = pick(whCols); rc2 = pick(whRoofCols); }
+    var bx = Math.cos(a) * r, bz = Math.sin(a) * r;
     if (blocked(bx, bz, Math.max(bw, bd) * 0.5 + 4)) continue;
-    addHouse(bx, bz, bw, bd, Math.floor(Math.random() * 4), wallCols[Math.floor(Math.random() * wallCols.length)], roofCols[Math.floor(Math.random() * roofCols.length)]); placed++;
+    addBuilding(bx, bz, bw, bd, Math.floor(Math.random() * 4), wc, rc2, sty); placed++;
   }
   placed = 0; guard = 0;
-  while (placed < 60 && guard++ < 1200) {
-    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 215, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
+  while (placed < 75 && guard++ < 1500) {
+    var a2 = rnd(0, 6.283), r2 = Math.sqrt(Math.random()) * 282, cx = Math.cos(a2) * r2, cz = Math.sin(a2) * r2;
     if (blocked(cx, cz, 3)) continue;
     addBox(cx, cz, 2, 1.4, 2, 0x8a5a2b); placed++;
   }
   var trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2b }), leafMat = new THREE.MeshLambertMaterial({ color: 0x2f7a3c });
   placed = 0; guard = 0;
   var treeStart = scene.children.length;
-  while (placed < 150 && guard++ < 1500) {
-    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 224, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
+  while (placed < 210 && guard++ < 2200) {
+    var a3 = rnd(0, 6.283), r3 = Math.sqrt(Math.random()) * 292, tx = Math.cos(a3) * r3, tz = Math.sin(a3) * r3;
     if (blocked(tx, tz, 2)) continue;
     var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3, 6), trunkMat);
     trunk.position.set(tx, 1.5, tz); scene.add(trunk); obsMeshes.push(trunk);
@@ -351,8 +460,12 @@ body.touch #runBtn { display:flex; }
   gun.add(g1, g2, flashM); gun.position.set(0.24, -0.22, -0.5); camera.add(gun);
 
   function resolve(p, r) {
+    var yy = p.fy || 0;
     for (var i = 0; i < obstacles.length; i++) {
       var o = obstacles[i];
+      if (p.x < o.x0 - r || p.x > o.x1 + r || p.z < o.z0 - r || p.z > o.z1 + r) continue;
+      if (o.top !== undefined && o.top < yy + 0.3) continue;
+      if (o.bot !== undefined && o.bot > yy + 1.8) continue;
       var cx = Math.max(o.x0, Math.min(p.x, o.x1)), cz = Math.max(o.z0, Math.min(p.z, o.z1));
       var dx = p.x - cx, dz = p.z - cz, d2 = dx * dx + dz * dz;
       if (d2 < r * r) {
@@ -379,7 +492,7 @@ body.touch #runBtn { display:flex; }
   }
 
   var player = { x: 0, z: 60, hp: 100, yaw: 0, pitch: 0, alive: true };
-  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 226, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
+  var bots = [], state = 'menu', matchT = 0, kills = 0, zoneR = 292, mag = 30, reloadT = 0, fireT = 0, firing = false, kick = 0, flashT = 0, hitT = 0, dmgFlash = 0, toastT = 0, menuYaw = 0;
   var rc = new THREE.Raycaster();
   var stridePh = 0, zoneBeepT = 0, stepT = 0, tpp = true, musicI = 0, scoped = false;
   var botCols = [0xc0392b, 0x2e86c1, 0x8e44ad, 0xd68910, 0x17a589, 0xb03a6b];
@@ -593,12 +706,12 @@ body.touch #runBtn { display:flex; }
   var LOOTCOL = { ammo: 0xffd04a, med: 0xff4d5e, armor: 0x6f8cff, bag: 0xb98a5a };
   var slots = ['pistol', null, null], slotMag = [12, 0, 0], cur = 0;
   var reserve = 36, meds = 0, armor = 0, hasBag = false, bagOpen = false;
-  var items = [], nearLoot = null, pickShown = '', running = false, stance = 0, eyeH = 1.65, py = 0, vy = 0, EYE = [1.65, 1.1, 0.45];
+  var items = [], nearLoot = null, pickShown = '', running = false, stance = 0, eyeH = 1.65, py = 0, vy = 0, air = false, EYE = [1.65, 1.1, 0.45];
   function setStance(n) { stance = n; $('crBtn').classList.toggle('on', n === 1); $('prBtn').classList.toggle('on', n === 2); if (n > 0) setRun(false); }
   function doJump() {
     if (state !== 'play' || drive || vault || !player.alive) return;
     if (stance > 0) { setStance(0); return; }
-    if (py > 0) return;
+    if (air || vy > 0) return;
     vy = 6.2; sfx('step');
   }
   function setRun(v) { running = (v === undefined) ? !running : !!v; if (running && stance !== 0) setStance(0); $('runBtn').classList.toggle('on', running); $('runBtn').innerHTML = running ? 'दौड़<br>रहे' : 'दौड़ें'; }
@@ -659,13 +772,14 @@ body.touch #runBtn { display:flex; }
     mk.position.y = 1.15; g.add(mk); g.userData.mk = mk;
     return g;
   }
-  function spawnLoot(type, x, z) {
-    var g = lootMesh(type); g.position.set(x, 0, z); scene.add(g);
-    items.push({ type: type, x: x, z: z, g: g, t: Math.random() * 6 });
+  function spawnLoot(type, x, z, y) {
+    var g = lootMesh(type); g.position.set(x, y || 0, z); scene.add(g);
+    items.push({ type: type, x: x, z: z, y: y || 0, g: g, t: Math.random() * 6 });
   }
   function clearLoot() { for (var i = 0; i < items.length; i++) scene.remove(items[i].g); items = []; nearLoot = null; }
-  function obsHit(x, z, pad) {
-    for (var i = 0; i < obstacles.length; i++) { var o = obstacles[i]; if (x > o.x0 - pad && x < o.x1 + pad && z > o.z0 - pad && z < o.z1 + pad) return true; }
+  function obsHit(x, z, pad, lvl) {
+    lvl = lvl || 0;
+    for (var i = 0; i < obstacles.length; i++) { var o = obstacles[i]; if (o.top !== undefined && o.top < lvl + 0.3) continue; if (o.bot !== undefined && o.bot > lvl + 1.8) continue; if (x > o.x0 - pad && x < o.x1 + pad && z > o.z0 - pad && z < o.z1 + pad) return true; }
     return false;
   }
   var LOOT_W = [['ammo', 30], ['med', 22], ['armor', 12], ['smg', 14], ['rifle', 12], ['sniper', 5], ['bag', 5]];
@@ -674,10 +788,17 @@ body.touch #runBtn { display:flex; }
     var r = Math.random() * tot; for (i = 0; i < LOOT_W.length; i++) { r -= LOOT_W[i][1]; if (r <= 0) return LOOT_W[i][0]; }
     return 'ammo';
   }
-  function inHouseSpot(h) {
+  function inHouseSpot(h, upper) {
     for (var k = 0; k < 30; k++) {
-      var x = rnd(h.x0 + 1.4, h.x1 - 1.4), z = rnd(h.z0 + 1.4, h.z1 - 1.4);
-      if (h.x1 - h.x0 < 3 || h.z1 - h.z0 < 3) break;
+      var x, z;
+      if (upper) {
+        var rg2 = Math.random() < 0.8 ? h.regA : h.regB; if (!rg2 || rg2.x1 <= rg2.x0 || rg2.z1 <= rg2.z0) continue;
+        x = rnd(rg2.x0, rg2.x1); z = rnd(rg2.z0, rg2.z1);
+        if (!obsHit(x, z, 0.7, h.upY)) return { x: x, z: z };
+        continue;
+      }
+      x = rnd(h.x0 + 1.4, h.x1 - 1.4); z = rnd(h.z0 + 1.4, h.z1 - 1.4);
+      if (h.floors === 2 && z < h.z0 + 3.6 && x < h.x0 + 9.5) continue;
       if (!obsHit(x, z, 0.7)) return { x: x, z: z };
     }
     return null;
@@ -687,15 +808,22 @@ body.touch #runBtn { display:flex; }
     var guaranteed = ['bag', 'bag', 'bag', 'bag', 'bag', 'rifle', 'rifle', 'rifle', 'rifle', 'sniper', 'sniper', 'sniper', 'armor', 'armor', 'armor', 'smg', 'smg', 'smg', 'smg'];
     var hs = houses.slice().sort(function () { return Math.random() - 0.5; }), i, j, s;
     for (i = 0; i < hs.length; i++) {
-      var n = 3 + Math.floor(Math.random() * 3);
+      var n = 3 + Math.floor(Math.random() * 3), two2 = hs[i].floors === 2;
       for (j = 0; j < n; j++) {
         s = inHouseSpot(hs[i]); if (!s) continue;
-        var t = (j === 0 && guaranteed.length) ? guaranteed.shift() : pickLootType();
+        var t = (j === 0 && !two2 && guaranteed.length) ? guaranteed.shift() : pickLootType();
         spawnLoot(t, s.x, s.z);
       }
+      if (two2) {
+        for (j = 0; j < 3; j++) {
+          s = inHouseSpot(hs[i], true); if (!s) continue;
+          var t2 = (j === 0 && guaranteed.length) ? guaranteed.shift() : pickLootType();
+          spawnLoot(t2, s.x, s.z, hs[i].upY);
+        }
+      }
     }
-    for (i = 0; i < 55; i++) {
-      s = freeSpot(6, 222);
+    for (i = 0; i < 70; i++) {
+      s = freeSpot(6, 290);
       if (blocked(s.x, s.z, 1.2)) continue;
       spawnLoot(pickLootType(), s.x, s.z);
     }
@@ -717,7 +845,7 @@ body.touch #runBtn { display:flex; }
       it.g.userData.mk.position.y = 1.15 + Math.sin(it.t * 3) * 0.1; it.g.rotation.y += dt * 1.5;
       var dx = it.x - player.x, dz = it.z - player.z, d2 = dx * dx + dz * dz;
       it.g.visible = d2 < 16900;
-      if (d2 > 2500) continue;
+      if (d2 > 2500 || Math.abs(it.y - py) > 2) continue;
       if (WEAPONS[it.type]) { if (!drive && d2 < bd) { bd = d2; best = it; } }
       else if (d2 < 1.5 * 1.5 && collect(it)) removeLoot(it);
     }
@@ -853,8 +981,8 @@ body.touch #runBtn { display:flex; }
     for (var k = 0; k < 60; k++) {
       var x, z;
       if (near) { var a = rnd(0, 6.283), r = rnd(6, 10); x = near.x + Math.cos(a) * r; z = near.z + Math.sin(a) * r; }
-      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 222); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
-      if (Math.hypot(x, z) > 226 || blocked(x, z, 3)) continue;
+      else { var a2 = rnd(0, 6.283), r2 = rnd(10, 290); x = Math.cos(a2) * r2; z = Math.sin(a2) * r2; }
+      if (Math.hypot(x, z) > 292 || blocked(x, z, 3)) continue;
       var ok = true; for (var i = 0; i < vehicles.length; i++) if (Math.hypot(vehicles[i].x - x, vehicles[i].z - z) < 7) { ok = false; break; }
       if (ok) return { x: x, z: z };
     }
@@ -862,7 +990,7 @@ body.touch #runBtn { display:flex; }
   }
   function spawnVehicles() {
     clearVehicles();
-    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
+    var types = ['bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick', 'bike', 'car', 'rick'], i, s;
     s = vehSpot(player); if (s) addVehicle('bike', s.x, s.z, rnd(0, 6.28));
     for (i = 0; i < types.length; i++) { s = vehSpot(null); if (s) addVehicle(types[i], s.x, s.z, rnd(0, 6.28)); }
   }
@@ -959,13 +1087,13 @@ body.touch #runBtn { display:flex; }
       var o = bots[i]; if (o === b || !o.alive) continue;
       var d = Math.hypot(o.x - b.x, o.z - b.z); if (d < bd) { bd = d; best = o; }
     }
-    b.target = best; b.los = best ? hasLOS(b, best) : false;
+    b.target = best; b.los = best ? ((best === player && player.fy > 1.5) ? Math.hypot(player.x - b.x, player.z - b.z) < 12 : hasLOS(b, best)) : false;
   }
   function botShoot(b, t, d) {
     var pdx = b.x - player.x, pdz = b.z - player.z, pd = Math.sqrt(pdx * pdx + pdz * pdz) || 1;
     if (pd < 75) sfx('botshot', { vol: Math.max(0.12, 1 - pd / 75), pan: (pdx * Math.cos(player.yaw) - pdz * Math.sin(player.yaw)) / pd });
     var chance = Math.max(0.15, Math.min(0.45, 0.55 - d * 0.012));
-    if (t === player) chance *= [1, 0.75, 0.55][stance] * (py > 0.2 ? 0.8 : 1);
+    if (t === player) chance *= [1, 0.75, 0.55][stance] * (air ? 0.8 : 1);
     var hit = Math.random() <= chance, off = hit ? 0 : 1.6;
     var bs = new THREE.Vector3(b.x + Math.sin(b.face) * 0.95, 1.36, b.z + Math.cos(b.face) * 0.95);
     spawnBullet(bs, new THREE.Vector3(t.x + (Math.random() - 0.5) * off * 2, 1.3 + (Math.random() - 0.5) * off, t.z + (Math.random() - 0.5) * off * 2), 'b');
@@ -1035,7 +1163,7 @@ body.touch #runBtn { display:flex; }
     var w = W();
     if (mag <= 0) { if (reserve > 0) reload(); else if (fireT <= 0) { toast('गोलियाँ ख़त्म'); fireT = 0.6; } return; }
     mag--; fireT = w.rate; kick = 0.06; flashT = 0.04; player.pitch += w.recoil; sfx('shot', slots[cur]);
-    var sp = (scoped ? w.spread * 0.25 : w.spread) * [1, 0.7, 0.5][stance] * (py > 0.05 ? 2 : 1);
+    var sp = (scoped ? w.spread * 0.25 : w.spread) * [1, 0.7, 0.5][stance] * (air ? 2 : 1);
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
     for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push.apply(list, bots[i].parts);
@@ -1135,7 +1263,7 @@ body.touch #runBtn { display:flex; }
     return best;
   }
   function doVault() {
-    if (state !== 'play' || vault || !player.alive) return;
+    if (state !== 'play' || vault || !player.alive || py > 0.5) return;
     var w = nearWindow(); if (!w) return;
     if (stance) setStance(0);
     if (scoped) setScope(false);
@@ -1155,7 +1283,7 @@ body.touch #runBtn { display:flex; }
     if (vault.t >= 1) { vault = null; vaultY = 0; resolve(player, 0.45); sfx('step'); }
   }
   function updateVaultUI() {
-    var show = state === 'play' && !vault && !drive && player.alive && !!nearWindow();
+    var show = state === 'play' && !vault && !drive && py < 0.5 && player.alive && !!nearWindow();
     if (show !== vaultShown) { vaultShown = show; $('vaultBtn').hidden = !show; }
   }
   if (!isTouch) $('vaultBtn').textContent = 'कूदें (E)';
@@ -1178,9 +1306,9 @@ body.touch #runBtn { display:flex; }
   function startMatch() {
     for (var i = 0; i < bots.length; i++) scene.remove(bots[i].g);
     bots = []; clearBullets();
-    var sp = freeSpot(150, 215);
+    var sp = freeSpot(200, 280);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 49; k++) { var s = freeSpot(8, 222, player, 60); bots.push(makeBot(s.x, s.z)); }
+    for (var k = 0; k < 49; k++) { var s = freeSpot(8, 290, player, 60); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
     toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; eyeH = 1.65; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
@@ -1296,7 +1424,7 @@ body.touch #runBtn { display:flex; }
   var lastTxt = '';
   function update(dt) {
     matchT += dt;
-    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 1.9);
+    zoneR = Math.max(8, ZONE0 - Math.max(0, matchT - 40) * 2.4);
     zoneMesh.scale.set(zoneR, 1, zoneR);
 
     var fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - joyY;
@@ -1308,7 +1436,10 @@ body.touch #runBtn { display:flex; }
     }
     var ml = Math.sqrt(fwd * fwd + str * str); if (ml > 1) { fwd /= ml; str /= ml; }
     var sp = (running || keys.ShiftLeft || keys.ShiftRight) && stance === 0 ? 12.5 : [5.5, 3, 1.4][stance];
-    if (py > 0 || vy > 0) { vy -= 22 * dt; py += vy * dt; if (py <= 0) { py = 0; vy = 0; sfx('step'); } }
+    var supY = supportY(player.x, player.z, py);
+    if (vy > 0 || py - supY > 0.25) { vy -= 22 * dt; py += vy * dt; if (py <= supY && vy <= 0) { py = supY; vy = 0; sfx('step'); } air = py - supY > 0.12; }
+    else { py = supY; vy = 0; air = false; }
+    player.fy = py;
     eyeH += (EYE[stance] - eyeH) * Math.min(1, dt * 12);
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     if (drive) driveStep(dt, fwd, str);
