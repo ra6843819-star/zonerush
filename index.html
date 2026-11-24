@@ -49,7 +49,7 @@ body.touch #sbar { display:flex; }
 .sbtn { width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.45); color:#fff; font-size:.55rem; font-weight:600; display:flex; align-items:center; justify-content:center; touch-action:none; }
 .sbtn.on { background:var(--accent); color:var(--accent-fg); border-color:#fff; }
 .abtn { position:absolute; right:24px; min-width:56px; height:38px; padding:0 12px; border-radius:19px; border:2px solid #fff; color:#1a1405; font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center; z-index:3; touch-action:none; cursor:pointer; }
-#vaultBtn { bottom:106px; background:rgba(255,200,61,.92); }
+#vaultBtn { bottom:150px; background:rgba(255,200,61,.92); }
 body.driving #carBtn { bottom:176px; }
 body.driving #joy { display:none !important; }
 .dbtn { display:none; position:absolute; z-index:3; touch-action:none; border-radius:50%; border:2px solid #fff; color:#fff; font-weight:700; align-items:center; justify-content:center; text-align:center; }
@@ -59,12 +59,16 @@ body.touch.driving .dbtn { display:flex; }
 #gasBtn { right:22px; bottom:34px; width:78px; height:78px; background:rgba(56,211,159,.8); font-size:.85rem; }
 #brkBtn { right:112px; bottom:34px; width:62px; height:62px; background:rgba(255,74,61,.8); font-size:.75rem; }
 #hornBtn { right:30px; bottom:122px; width:46px; height:46px; background:rgba(255,200,61,.9); color:#1a1405; font-size:.6rem; }
-body.driving #fireBtn, body.driving #rldBtn, body.driving #swapBtn, body.driving #runBtn, body.driving #sbar, body.driving #cross, body.driving #pickBtn, body.driving #vaultBtn { display:none !important; }
-#carBtn { bottom:198px; background:rgba(120,190,255,.95); }
-#pickBtn { bottom:152px; background:rgba(120,220,140,.95); }
+body.driving #jumpBtn, body.driving #crBtn, body.driving #prBtn, body.driving #fireBtn, body.driving #rldBtn, body.driving #swapBtn, body.driving #runBtn, body.driving #sbar, body.driving #cross, body.driving #pickBtn, body.driving #vaultBtn { display:none !important; }
+#carBtn { bottom:238px; background:rgba(120,190,255,.95); }
+#pickBtn { bottom:194px; background:rgba(120,220,140,.95); }
 #swapBtn { right:156px; bottom:30px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.5); color:#fff; font-weight:700; display:none; align-items:center; justify-content:center; font-size:.6rem; }
 body.touch #swapBtn { display:flex; }
 #runBtn { left:24px; bottom:146px; width:62px; height:62px; border-radius:50%; background:rgba(255,200,61,.85); border:3px solid #fff; color:#1a1405; font-weight:800; display:none; align-items:center; justify-content:center; text-align:center; line-height:1.1; font-size:.75rem; }
+#jumpBtn, #crBtn, #prBtn { display:none; bottom:102px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.22); border:2px solid rgba(255,255,255,.55); color:#fff; font-weight:700; align-items:center; justify-content:center; text-align:center; font-size:.6rem; }
+body.touch #jumpBtn, body.touch #crBtn, body.touch #prBtn { display:flex; }
+#jumpBtn { right:24px; } #crBtn { right:76px; } #prBtn { right:128px; }
+#crBtn.on, #prBtn.on { background:rgba(56,211,159,.85); color:#06231a; border-color:#fff; }
 #runBtn.on { background:rgba(255,74,61,.95); color:#fff; box-shadow:0 0 14px rgba(255,74,61,.9); }
 body.touch #runBtn { display:flex; }
 .gico { width:64px; height:22px; flex:none; }
@@ -109,7 +113,7 @@ body.touch #runBtn { display:flex; }
     <div id="zoomLbl">2×</div>
   </div>
   <div class="hud" id="stats">
-    <div class="pill" id="statTxt">बचे: 30 · किल: 0</div>
+    <div class="pill" id="statTxt">बचे: 50 · किल: 0</div>
     <div id="hpWrap"><div id="hpBar"></div></div>
     <div id="arWrap"><div id="arBar"></div></div>
   </div>
@@ -125,6 +129,7 @@ body.touch #runBtn { display:flex; }
   <div class="ctl" id="fireBtn">फ़ायर</div>
   <div class="ctl" id="swapBtn">बदलें</div>
   <div class="ctl" id="runBtn">दौड़ें</div>
+  <div class="ctl" id="jumpBtn">उछलें</div><div class="ctl" id="crBtn">झुकें</div><div class="ctl" id="prBtn">लेटें</div>
   <div id="sbar">
     <div class="sbtn" id="camBtn">कैमरा</div>
     <div class="sbtn" id="muteBtn">ध्वनि</div>
@@ -139,10 +144,10 @@ body.touch #runBtn { display:flex; }
   <div id="bagPanel" hidden><div id="bagBody"></div></div>
   <div id="overlay">
     <h1 id="ovTitle">ज़ोन रश</h1>
-    <p id="ovText">30 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
+    <p id="ovText">50 खिलाड़ियों के मैच में आख़िरी तक बचिए। सिकुड़ते लाल ज़ोन के अंदर रहिए और बाक़ी सबको हराइए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 23 · अलग दौड़ बटन</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 24 · 50 खिलाड़ी, उछलना, झुकना, लेटना</p>
   </div>
 </div>
 
@@ -153,8 +158,8 @@ body.touch #runBtn { display:flex; }
   var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
   $('ovHelp').textContent = isTouch
-    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन (जोयस्टिक के ऊपर) एक बार दबाइए तो तेज़ दौड़ शुरू, जोयस्टिक छोड़ते ही वापस चलना · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: बाएँ ◀ ▶ से मोड़िए, दाएँ हरा बटन तेज़, लाल ब्रेक या पीछे, पीला हॉर्न; टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
-    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप (फिर दबाने पर और ज़ूम) · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · गाड़ी में G: हॉर्न · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
+    ? 'बायाँ गोला: चलना · उँगली घुमाना: देखना · दाएँ: फ़ायर, रीलोड, बदलें · "दौड़ें" बटन (जोयस्टिक के ऊपर) एक बार दबाइए तो तेज़ दौड़ शुरू, जोयस्टिक छोड़ते ही वापस चलना · ऊपर दाएँ: कैमरा, आवाज़, स्कोप, बैग · चमकता सामान उठाइए, हथियार "उठाएँ" बटन से · "उछलें" बटन से ऊपर कूदिए, "झुकें" और "लेटें" से छिपिए (धीमा चलना, निशाना पक्का, दुश्मन का निशाना कमज़ोर) · पीली खिड़की के पास "कूदें" · गाड़ी (बाइक, कार, रिक्शा) के पास नीला "बैठें" बटन: बाएँ ◀ ▶ से मोड़िए, दाएँ हरा बटन तेज़, लाल ब्रेक या पीछे, पीला हॉर्न; टक्कर से दुश्मन गिरता है, "उतरें" से बाहर।'
+    : 'W A S D: चलना · माउस: देखना · क्लिक या Space: फ़ायर · R: रीलोड · Shift दबाए रखें: दौड़ना (वरना धीमा चलना) · V: कैमरा · M: आवाज़ · दायाँ क्लिक या Z: स्कोप (फिर दबाने पर और ज़ूम) · J: उछलना · C: झुकना · X: लेटना · E: उठाना, गाड़ी में बैठना/उतरना या खिड़की से कूदना · गाड़ी में G: हॉर्न · B: बैग · 1/2/3 या Q: हथियार बदलना · H: इलाज किट।';
   if (typeof THREE === 'undefined') {
     $('ovText').textContent = '3D लाइब्रेरी लोड नहीं हुई। पेज दोबारा खोलिए।';
     $('startBtn').hidden = true; return;
@@ -588,8 +593,15 @@ body.touch #runBtn { display:flex; }
   var LOOTCOL = { ammo: 0xffd04a, med: 0xff4d5e, armor: 0x6f8cff, bag: 0xb98a5a };
   var slots = ['pistol', null, null], slotMag = [12, 0, 0], cur = 0;
   var reserve = 36, meds = 0, armor = 0, hasBag = false, bagOpen = false;
-  var items = [], nearLoot = null, pickShown = '', running = false;
-  function setRun(v) { running = (v === undefined) ? !running : !!v; $('runBtn').classList.toggle('on', running); $('runBtn').innerHTML = running ? 'दौड़<br>रहे' : 'दौड़ें'; }
+  var items = [], nearLoot = null, pickShown = '', running = false, stance = 0, eyeH = 1.65, py = 0, vy = 0, EYE = [1.65, 1.1, 0.45];
+  function setStance(n) { stance = n; $('crBtn').classList.toggle('on', n === 1); $('prBtn').classList.toggle('on', n === 2); if (n > 0) setRun(false); }
+  function doJump() {
+    if (state !== 'play' || drive || vault || !player.alive) return;
+    if (stance > 0) { setStance(0); return; }
+    if (py > 0) return;
+    vy = 6.2; sfx('step');
+  }
+  function setRun(v) { running = (v === undefined) ? !running : !!v; if (running && stance !== 0) setStance(0); $('runBtn').classList.toggle('on', running); $('runBtn').innerHTML = running ? 'दौड़<br>रहे' : 'दौड़ें'; }
   function W() { return WEAPONS[slots[cur]]; }
   function maxSlots() { return hasBag ? 3 : 2; }
   function capMeds() { return hasBag ? 5 : 2; }
@@ -863,7 +875,7 @@ body.touch #runBtn { display:flex; }
     return best;
   }
   function enterVehicle(v) {
-    drive = v; driveUI(true); setScope(false); firing = false; toggleBag(false); vault = null; vaultY = 0; setRun(false);
+    drive = v; driveUI(true); setScope(false); firing = false; toggleBag(false); vault = null; vaultY = 0; setRun(false); setStance(0); py = 0; vy = 0;
     player.x = v.x; player.z = v.z; player.yaw = v.h; player.pitch = -0.18; v.sp = 0;
     toast(VEH[v.type].n + ': ◀ ▶ से मोड़िए, हरा बटन = तेज़, लाल = ब्रेक'); sfx('pickup');
   }
@@ -953,6 +965,7 @@ body.touch #runBtn { display:flex; }
     var pdx = b.x - player.x, pdz = b.z - player.z, pd = Math.sqrt(pdx * pdx + pdz * pdz) || 1;
     if (pd < 75) sfx('botshot', { vol: Math.max(0.12, 1 - pd / 75), pan: (pdx * Math.cos(player.yaw) - pdz * Math.sin(player.yaw)) / pd });
     var chance = Math.max(0.15, Math.min(0.45, 0.55 - d * 0.012));
+    if (t === player) chance *= [1, 0.75, 0.55][stance] * (py > 0.2 ? 0.8 : 1);
     var hit = Math.random() <= chance, off = hit ? 0 : 1.6;
     var bs = new THREE.Vector3(b.x + Math.sin(b.face) * 0.95, 1.36, b.z + Math.cos(b.face) * 0.95);
     spawnBullet(bs, new THREE.Vector3(t.x + (Math.random() - 0.5) * off * 2, 1.3 + (Math.random() - 0.5) * off, t.z + (Math.random() - 0.5) * off * 2), 'b');
@@ -995,7 +1008,7 @@ body.touch #runBtn { display:flex; }
     b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
     var dpl = Math.hypot(b.x - player.x, b.z - player.z), dv = dpl < 32;
     if (dv !== b.dv) { b.dv = dv; b.rig.setDetail(dv); }
-    b.g.visible = dpl < 150;
+    b.g.visible = dpl < 115;
     var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
 
@@ -1022,7 +1035,7 @@ body.touch #runBtn { display:flex; }
     var w = W();
     if (mag <= 0) { if (reserve > 0) reload(); else if (fireT <= 0) { toast('गोलियाँ ख़त्म'); fireT = 0.6; } return; }
     mag--; fireT = w.rate; kick = 0.06; flashT = 0.04; player.pitch += w.recoil; sfx('shot', slots[cur]);
-    var sp = scoped ? w.spread * 0.25 : w.spread;
+    var sp = (scoped ? w.spread * 0.25 : w.spread) * [1, 0.7, 0.5][stance] * (py > 0.05 ? 2 : 1);
     rc.setFromCamera({ x: (Math.random() - 0.5) * sp, y: (Math.random() - 0.5) * sp }, camera); rc.far = 90;
     var list = obsMeshes.slice();
     for (var i = 0; i < bots.length; i++) if (bots[i].alive) list.push.apply(list, bots[i].parts);
@@ -1060,7 +1073,7 @@ body.touch #runBtn { display:flex; }
         var off = drive.type === 'bike' ? 0.32 : -0.05, hy = drive.type === 'bike' ? -0.12 : -0.04;
         pm.position.set(player.x + sy * off, hy, player.z + cy * off); pm.rotation.y = player.yaw + Math.PI;
         prig.legL.rotation.x = -1.35; prig.legR.rotation.x = -1.35; prig.kneeL.rotation.x = 1.45; prig.kneeR.rotation.x = 1.45;
-        prig.body.position.y = 0; prig.body.rotation.y = 0;
+        prig.body.position.y = 0; prig.body.rotation.y = 0; prig.g.rotation.x = 0; prig.g.position.set(0, 0, 0); prig.g.scale.y = 1;
       }
       cpiv.set(player.x, 1.8, player.z);
       cdir.set(sy * cp, -sp, cy * cp).normalize();
@@ -1074,10 +1087,11 @@ body.touch #runBtn { display:flex; }
     var fp = !tpp || scoped;
     gun.visible = fp && !scoped;
     pm.visible = !fp && player.alive;
-    pm.position.set(player.x, vaultY * 0.9, player.z); poseHuman(prig, stridePh, moving);
+    pm.position.set(player.x, vaultY * 0.9 + py, player.z); poseHuman(prig, stridePh, moving);
+    prig.g.rotation.x = stance === 2 ? Math.PI / 2 : 0; prig.g.position.set(0, stance === 2 ? 0.22 : 0, stance === 2 ? -0.9 : 0); prig.g.scale.y = stance === 1 ? 0.75 : 1;
     pm.rotation.y = player.yaw + Math.PI;
-    if (fp) { camera.position.set(player.x, 1.65 + vaultY, player.z); return; }
-    cpiv.set(player.x + cy * 0.6, 1.7 + vaultY, player.z - sy * 0.6);
+    if (fp) { camera.position.set(player.x, eyeH + vaultY + py, player.z); return; }
+    cpiv.set(player.x + cy * 0.6, eyeH + 0.05 + vaultY + py, player.z - sy * 0.6);
     cdir.set(sy * cp, -sp, cy * cp).normalize();
     var dist = camera.aspect < 1 ? 5.4 : 3.6;
     rc.set(cpiv, cdir); rc.far = dist;
@@ -1123,6 +1137,7 @@ body.touch #runBtn { display:flex; }
   function doVault() {
     if (state !== 'play' || vault || !player.alive) return;
     var w = nearWindow(); if (!w) return;
+    if (stance) setStance(0);
     if (scoped) setScope(false);
     var tx, tz;
     if (w.axis === 'x') { var s1 = player.z >= w.fixed ? 1 : -1; tx = w.wx; tz = w.fixed - s1 * 1.4; }
@@ -1165,16 +1180,16 @@ body.touch #runBtn { display:flex; }
     bots = []; clearBullets();
     var sp = freeSpot(150, 215);
     player.x = sp.x; player.z = sp.z; player.hp = 100; player.alive = true; player.yaw = Math.atan2(sp.x, sp.z); player.pitch = 0;
-    for (var k = 0; k < 29; k++) { var s = freeSpot(8, 222, player, 60); bots.push(makeBot(s.x, s.z)); }
+    for (var k = 0; k < 49; k++) { var s = freeSpot(8, 222, player, 60); bots.push(makeBot(s.x, s.z)); }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
     slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
-    toggleBag(false); setRun(false); nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
+    toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; eyeH = 1.65; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
     setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
     initAudio(); sfx('start');
     if (!isTouch && game.requestPointerLock) { try { var pr = game.requestPointerLock(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   }
   function endGame(win) {
-    setScope(false); toggleBag(false); setRun(false); if (drive) { drive.sp = 0; drive = null; } driveUI(false); carShown = ''; $('carBtn').hidden = true; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true;
+    setScope(false); toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; if (drive) { drive.sp = 0; drive = null; } driveUI(false); carShown = ''; $('carBtn').hidden = true; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true;
     vault = null; vaultY = 0; vaultShown = false; $('vaultBtn').hidden = true; state = 'over'; firing = false; sfx(win ? 'win' : 'lose');
     if (document.exitPointerLock) { try { document.exitPointerLock(); } catch (e) {} }
     $('ovTitle').textContent = win ? 'जीत गए! आख़िरी खिलाड़ी आप हैं' : 'आप आउट हो गए';
@@ -1193,6 +1208,10 @@ body.touch #runBtn { display:flex; }
     if (e.code === 'KeyZ') toggleScope();
     if (e.code === 'KeyE') { if (!drive && doPick()) { } else if (!vehicleAct()) doVault(); }
     if (e.code === 'KeyB') toggleBag();
+    if (e.code === 'KeyJ') doJump();
+    if (e.code === 'KeyC') setStance(stance === 1 ? 0 : 1);
+    if (e.code === 'KeyX') setStance(stance === 2 ? 0 : 2);
+    if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && stance) setStance(0);
     if (e.code === 'KeyG' && drive) sfx('horn');
     if (e.code === 'KeyH') useMed();
     if (e.code === 'KeyQ') nextWeapon();
@@ -1248,6 +1267,9 @@ body.touch #runBtn { display:flex; }
       else if (tg.classList && tg.classList.contains('dbtn')) { dHold[t.identifier] = tg.id; setDrv(tg.id, true); if (tg.id === 'hornBtn') sfx('horn'); }
       else if (tg.id === 'bagBtn') { toggleBag(); }
       else if (tg.id === 'swapBtn') { nextWeapon(); }
+      else if (tg.id === 'jumpBtn') { doJump(); }
+      else if (tg.id === 'crBtn') { if (!drive) setStance(stance === 1 ? 0 : 1); }
+      else if (tg.id === 'prBtn') { if (!drive) setStance(stance === 2 ? 0 : 2); }
       else if (tg.id === 'runBtn') { setRun(); }
       else if (lookId === null) { lookId = t.identifier; lookLX = t.clientX; lookLY = t.clientY; }
     }
@@ -1285,7 +1307,9 @@ body.touch #runBtn { display:flex; }
       fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
     }
     var ml = Math.sqrt(fwd * fwd + str * str); if (ml > 1) { fwd /= ml; str /= ml; }
-    var sp = (running || keys.ShiftLeft || keys.ShiftRight) ? 12.5 : 5.5;
+    var sp = (running || keys.ShiftLeft || keys.ShiftRight) && stance === 0 ? 12.5 : [5.5, 3, 1.4][stance];
+    if (py > 0 || vy > 0) { vy -= 22 * dt; py += vy * dt; if (py <= 0) { py = 0; vy = 0; sfx('step'); } }
+    eyeH += (EYE[stance] - eyeH) * Math.min(1, dt * 12);
     var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     if (drive) driveStep(dt, fwd, str);
     else if (vault) stepVault(dt);
