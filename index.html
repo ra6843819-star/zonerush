@@ -78,12 +78,25 @@ body.touch #runBtn { display:flex; }
 .gico { width:64px; height:22px; flex:none; }
 #arWrap { width:130px; height:6px; background:rgba(255,255,255,.18); border-radius:6px; overflow:hidden; }
 #arBar { height:100%; width:0; background:#6f8cff; transition:width .15s; }
-#bagPanel { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92%,380px); max-height:88%; overflow:hidden; background:rgba(11,17,24,.95); border:1px solid rgba(255,255,255,.2); border-radius:14px; padding:12px; z-index:6; }
+#bagPanel { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(94%,430px); max-height:90%; overflow-y:auto; overflow-x:hidden; background:rgba(11,17,24,.95); border:1px solid rgba(255,255,255,.2); border-radius:14px; padding:12px; z-index:6; }
 #bagPanel h2 { margin:0 0 6px; font-family:var(--font-head); font-size:1.1rem; }
 .bsec { margin:8px 0 4px; font-size:.72rem; letter-spacing:.08em; color:var(--muted); }
 .brow { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,.07); margin-bottom:4px; font-size:.8rem; }
 .brow.dim { opacity:.55; }
 .brow.on { outline:2px solid var(--accent); }
+.bgrid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.bt { background:rgba(255,255,255,.07); border-radius:10px; padding:6px 8px; display:flex; flex-direction:column; gap:3px; font-size:.78rem; }
+.bt .top { display:flex; align-items:center; gap:6px; }
+.bt svg { width:30px; height:30px; flex:none; }
+.bt b { font-size:.95rem; }
+.bt .nm { opacity:.8; font-size:.72rem; }
+.bt .bar { height:5px; border-radius:4px; background:rgba(255,255,255,.15); overflow:hidden; }
+.bt .bar i { display:block; height:100%; background:var(--accent); }
+.bt.full .bar i { background:#e0a43a; }
+.bt .bbtn { padding:4px 8px; font-size:.74rem; }
+.bhp { display:flex; align-items:center; gap:8px; font-size:.78rem; margin:2px 0 6px; }
+.bhp .bar { flex:1; height:8px; border-radius:5px; background:rgba(255,255,255,.15); overflow:hidden; }
+.bhp .bar i { display:block; height:100%; }
 .bbtn { font-size:.8rem; font:inherit; cursor:pointer; border:0; border-radius:8px; padding:6px 12px; background:var(--accent); color:var(--accent-fg); font-weight:700; }
 @media (max-height:420px) { #overlay h1 { font-size:1.5rem; } #overlay { gap:8px; padding:10px; } #overlay p { font-size:.8rem; } }
 #scopeOv { inset:0; background:radial-gradient(circle at 50% 50%, transparent 0, transparent 20vmin, rgba(0,0,0,.4) 29.6vmin, #000 30.4vmin); }
@@ -152,7 +165,7 @@ body.touch #runBtn { display:flex; }
     <p id="ovText">48 खिलाड़ी, 12 टीमें — आपकी टीम में 4 लोग (3 साथी नीले रंग के, सिर के ऊपर नीला निशान)। सिकुड़ते लाल ज़ोन में रहिए और आख़िरी टीम बनिए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 29 · तेज़ गोली (पिछला: बड़ा नक्शा, नदियाँ, पुल)</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 30 · बड़ा बैग: बैंडेज, कवच प्लेट, सामान की तस्वीरें</p>
   </div>
 </div>
 
@@ -792,9 +805,9 @@ body.touch #runBtn { display:flex; }
     rifle: { n: 'राइफ़ल', mag: 30, dmg: 22, rate: 0.11, spread: 0.006, recoil: 0.004, rt: 1.7, len: 1.0, col: 0x5aa0ff },
     sniper: { n: 'स्नाइपर', mag: 5, dmg: 85, rate: 0.95, spread: 0.0015, recoil: 0.03, rt: 2.3, len: 1.5, col: 0xff7a2f }
   };
-  var LOOTCOL = { ammo: 0xffd04a, med: 0xff4d5e, armor: 0x6f8cff, bag: 0xb98a5a };
+  var LOOTCOL = { ammo: 0xffd04a, med: 0xff4d5e, armor: 0x6f8cff, bag: 0xb98a5a, band: 0xf2f2f2, plate: 0x9fb4ff };
   var slots = ['pistol', null, null], slotMag = [12, 0, 0], cur = 0;
-  var reserve = 36, meds = 0, armor = 0, hasBag = false, bagOpen = false;
+  var reserve = 36, meds = 0, armor = 0, bands = 0, plates = 0, hasBag = false, bagOpen = false;
   var items = [], nearLoot = null, pickShown = '', running = false, stance = 0, eyeH = 1.65, py = 0, vy = 0, air = false, EYE = [1.65, 1.1, 0.45];
   function setStance(n) { stance = n; $('crBtn').classList.toggle('on', n === 1); $('prBtn').classList.toggle('on', n === 2); if (n > 0) setRun(false); }
   function doJump() {
@@ -806,8 +819,10 @@ body.touch #runBtn { display:flex; }
   function setRun(v) { running = (v === undefined) ? !running : !!v; if (running && stance !== 0) setStance(0); $('runBtn').classList.toggle('on', running); $('runBtn').innerHTML = running ? 'दौड़<br>रहे' : 'दौड़ें'; }
   function W() { return WEAPONS[slots[cur]]; }
   function maxSlots() { return hasBag ? 3 : 2; }
-  function capMeds() { return hasBag ? 5 : 2; }
-  function capAmmo() { return hasBag ? 240 : 120; }
+  function capMeds() { return hasBag ? 8 : 2; }
+  function capAmmo() { return hasBag ? 400 : 120; }
+  function capBand() { return hasBag ? 12 : 3; }
+  function capPlate() { return hasBag ? 5 : 1; }
   function applyGunLook() {
     var w = W();
     g1.scale.z = w.len; g1.position.z = 0.3 * (1 - w.len);
@@ -849,11 +864,21 @@ body.touch #runBtn { display:flex; }
     if (meds <= 0 || player.hp >= 100 || !player.alive) return;
     meds--; player.hp = Math.min(100, player.hp + 45); toast('+45 सेहत'); sfx('pickup');
   }
+  function useBand() {
+    if (bands <= 0 || player.hp >= 100 || !player.alive) return;
+    bands--; player.hp = Math.min(100, player.hp + 20); toast('+20 सेहत'); sfx('pickup');
+  }
+  function usePlate() {
+    if (plates <= 0 || armor >= 50 || !player.alive) return;
+    plates--; armor = Math.min(50, armor + 25); toast('+25 कवच'); sfx('pickup');
+  }
   function lootMesh(type) {
     var g = new THREE.Group(), col = WEAPONS[type] ? WEAPONS[type].col : LOOTCOL[type];
     function box(w, h, d, c, x, y, z) { var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); g.add(m); return m; }
     if (type === 'ammo') box(0.5, 0.3, 0.35, 0x4a5a3a, 0, 0.3, 0), box(0.52, 0.06, 0.37, 0xffd04a, 0, 0.46, 0);
     else if (type === 'med') { box(0.5, 0.32, 0.36, 0xf2f2f2, 0, 0.3, 0); box(0.3, 0.08, 0.38, 0xe02b3c, 0, 0.3, 0); box(0.08, 0.3, 0.38, 0xe02b3c, 0, 0.3, 0); }
+    else if (type === 'band') { box(0.34, 0.14, 0.34, 0xf4f1e8, 0, 0.25, 0); box(0.36, 0.05, 0.36, 0xe02b3c, 0, 0.25, 0); }
+    else if (type === 'plate') { box(0.4, 0.5, 0.07, 0x8fa4e8, 0, 0.4, 0); box(0.3, 0.38, 0.09, 0x5d74c4, 0, 0.4, 0); }
     else if (type === 'armor') { box(0.46, 0.5, 0.2, 0x3f5fd0, 0, 0.4, 0); box(0.46, 0.1, 0.22, 0x2a2f38, 0, 0.6, 0); }
     else if (type === 'bag') { box(0.42, 0.5, 0.26, 0x8a5a2b, 0, 0.35, 0); box(0.34, 0.2, 0.08, 0x6d4520, 0, 0.3, 0.16); }
     else { var L = WEAPONS[type].len; box(0.1, 0.12, 0.6 * L + 0.2, col, 0, 0.35, 0); box(0.08, 0.2, 0.1, 0x2a2f38, 0, 0.22, 0.12); }
@@ -871,7 +896,7 @@ body.touch #runBtn { display:flex; }
     for (var i = 0; i < obstacles.length; i++) { var o = obstacles[i]; if (o.top !== undefined && o.top < lvl + 0.3) continue; if (o.bot !== undefined && o.bot > lvl + 1.8) continue; if (x > o.x0 - pad && x < o.x1 + pad && z > o.z0 - pad && z < o.z1 + pad) return true; }
     return false;
   }
-  var LOOT_W = [['ammo', 30], ['med', 22], ['armor', 12], ['smg', 14], ['rifle', 12], ['sniper', 5], ['bag', 5]];
+  var LOOT_W = [['ammo', 30], ['med', 18], ['band', 16], ['plate', 8], ['armor', 10], ['smg', 14], ['rifle', 12], ['sniper', 5], ['bag', 5]];
   function pickLootType() {
     var tot = 0, i; for (i = 0; i < LOOT_W.length; i++) tot += LOOT_W[i][1];
     var r = Math.random() * tot; for (i = 0; i < LOOT_W.length; i++) { r -= LOOT_W[i][1]; if (r <= 0) return LOOT_W[i][0]; }
@@ -921,8 +946,10 @@ body.touch #runBtn { display:flex; }
     var t = it.type;
     if (t === 'ammo') { if (reserve >= capAmmo()) return false; reserve = Math.min(capAmmo(), reserve + 30); toast('+30 गोलियाँ'); }
     else if (t === 'med') { if (meds >= capMeds()) return false; meds++; toast('इलाज किट मिली'); }
+    else if (t === 'band') { if (bands >= capBand()) return false; bands++; toast('बैंडेज मिला'); }
+    else if (t === 'plate') { if (plates >= capPlate()) return false; plates++; toast('कवच प्लेट मिली'); }
     else if (t === 'armor') { if (armor >= 50) return false; armor = 50; toast('कवच मिला'); }
-    else if (t === 'bag') { if (hasBag) return false; hasBag = true; toast('बैग मिला! 3 हथियार, ज़्यादा सामान'); }
+    else if (t === 'bag') { if (hasBag) return false; hasBag = true; toast('बड़ा बैग मिला! 3 हथियार, ज़्यादा सामान'); }
     else return false;
     sfx('pickup'); return true;
   }
@@ -962,20 +989,37 @@ body.touch #runBtn { display:flex; }
     else b = '<rect x="2" y="6" width="14" height="8" rx="2" fill="' + d + '"/><rect x="16" y="8" width="46" height="3" rx="1" fill="' + c + '"/><rect x="22" y="2" width="18" height="5" rx="2" fill="' + d + '"/><rect x="24" y="11" width="6" height="8" fill="' + d + '"/><rect x="58" y="6" width="4" height="7" fill="' + d + '"/>';
     return '<svg class="gico" viewBox="0 0 64 22">' + b + '</svg>';
   }
+  var BICO = {
+    ammo: '<svg viewBox="0 0 30 30"><rect x="5" y="9" width="5" height="16" rx="2" fill="#ffd04a"/><rect x="12" y="6" width="5" height="19" rx="2" fill="#e8b830"/><rect x="19" y="9" width="5" height="16" rx="2" fill="#ffd04a"/><rect x="4" y="22" width="21" height="3" fill="#7a5a1a"/></svg>',
+    med: '<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="18" rx="3" fill="#f2f2f2"/><rect x="12" y="10" width="6" height="12" fill="#e02b3c"/><rect x="9" y="13" width="12" height="6" fill="#e02b3c"/></svg>',
+    band: '<svg viewBox="0 0 30 30"><rect x="4" y="10" width="22" height="11" rx="5" fill="#f4f1e8"/><rect x="12" y="10" width="6" height="11" fill="#e02b3c"/></svg>',
+    plate: '<svg viewBox="0 0 30 30"><path d="M5 5h20v11c0 6-5 9-10 11C10 25 5 22 5 16z" fill="#8fa4e8"/><path d="M10 9h10v7c0 3-3 5-5 6-2-1-5-3-5-6z" fill="#5d74c4"/></svg>',
+    armor: '<svg viewBox="0 0 30 30"><path d="M7 4l5 3h6l5-3 3 7-4 3v12H8V14l-4-3z" fill="#3f5fd0"/><rect x="8" y="22" width="14" height="3" fill="#2a2f38"/></svg>',
+    bag: '<svg viewBox="0 0 30 30"><rect x="7" y="7" width="16" height="20" rx="4" fill="#8a5a2b"/><rect x="10" y="17" width="10" height="6" rx="2" fill="#6d4520"/><path d="M11 7c0-4 8-4 8 0" stroke="#6d4520" stroke-width="2" fill="none"/></svg>'
+  };
+  function bagTile(type, name, n, cap, act, canUse, unit) {
+    var pc = cap > 0 ? Math.min(100, Math.round(n / cap * 100)) : 0;
+    return '<div class="bt' + (n >= cap ? ' full' : '') + '"><div class="top">' + BICO[type] + '<div><b>' + n + ' / ' + cap + '</b><div class="nm">' + name + '</div></div></div><div class="bar"><i style="width:' + pc + '%"></i></div>' +
+      (act ? (canUse ? '<button class="bbtn" data-act="' + act + '">' + unit + '</button>' : '<span class="nm">' + (n > 0 ? 'अभी ज़रूरत नहीं' : 'ख़ाली') + '</span>') : '') + '</div>';
+  }
   function renderBag() {
-    var h = '<h2>बैग</h2><div class="bsec">हथियार</div>', i;
+    var h = '<h2>बैग ' + (hasBag ? '(बड़ा)' : '(छोटा)') + '</h2>', i;
+    h += '<div class="bhp"><span>सेहत ' + Math.max(0, Math.round(player.hp)) + '</span><div class="bar"><i style="width:' + Math.max(0, player.hp) + '%;background:#4cd37b"></i></div></div>';
+    h += '<div class="bsec">हथियार</div>';
     for (i = 0; i < 3; i++) {
       if (i >= maxSlots()) h += '<div class="brow dim"><span>खाना ' + (i + 1) + ': बंद (बैग चाहिए)</span></div>';
       else if (!slots[i]) h += '<div class="brow dim"><span>खाना ' + (i + 1) + ': ख़ाली</span></div>';
       else h += '<div class="brow' + (i === cur ? ' on' : '') + '">' + gunSvg(slots[i]) + '<span style="flex:1">' + (i + 1) + '. ' + WEAPONS[slots[i]].n + ' · ' + (i === cur ? mag : slotMag[i]) + '/' + WEAPONS[slots[i]].mag + '</span>' +
         (i === cur ? '<span>हाथ में</span>' : '<button class="bbtn" data-act="w' + i + '">चुनें</button>') + '</div>';
     }
-    h += '<div class="bsec">सामान</div>';
-    h += '<div class="brow"><span>गोलियाँ: ' + reserve + ' / ' + capAmmo() + '</span></div>';
-    h += '<div class="brow"><span>इलाज किट: ' + meds + ' / ' + capMeds() + '</span>' + (meds > 0 && player.hp < 100 ? '<button class="bbtn" data-act="med">इस्तेमाल</button>' : '') + '</div>';
-    h += '<div class="brow"><span>कवच: ' + Math.round(armor) + ' / 50</span></div>';
-    h += '<div class="brow"><span>बैग: ' + (hasBag ? 'है (3 हथियार)' : 'नहीं है') + '</span></div>';
-    h += '<div style="text-align:center;margin-top:8px"><button class="bbtn" data-act="bagclose">बंद करें</button></div>';
+    h += '<div class="bsec">सामान (' + (hasBag ? 'बड़े बैग में ज़्यादा जगह' : 'बैग मिले तो और जगह') + ')</div><div class="bgrid">';
+    h += bagTile('ammo', 'गोलियाँ', reserve, capAmmo(), '', false, '');
+    h += bagTile('med', 'इलाज किट (+45)', meds, capMeds(), 'med', meds > 0 && player.hp < 100, 'इस्तेमाल');
+    h += bagTile('band', 'बैंडेज (+20)', bands, capBand(), 'band', bands > 0 && player.hp < 100, 'इस्तेमाल');
+    h += bagTile('plate', 'कवच प्लेट (+25)', plates, capPlate(), 'plate', plates > 0 && armor < 50, 'लगाएँ');
+    h += bagTile('armor', 'पहना कवच', Math.round(armor), 50, '', false, '');
+    h += '<div class="bt' + (hasBag ? ' full' : '') + '"><div class="top">' + BICO.bag + '<div><b>' + (hasBag ? 'बड़ा बैग' : 'छोटा बैग') + '</b><div class="nm">' + (hasBag ? '3 हथियार' : '2 हथियार') + '</div></div></div></div>';
+    h += '</div><div style="text-align:center;margin-top:8px"><button class="bbtn" data-act="bagclose">बंद करें</button></div>';
     $('bagBody').innerHTML = h;
   }
   var bagTimer = 0;
@@ -988,6 +1032,8 @@ body.touch #runBtn { display:flex; }
   function uiAct(a) {
     if (a === 'bagclose') toggleBag(false);
     else if (a === 'med') { useMed(); renderBag(); }
+    else if (a === 'band') { useBand(); renderBag(); }
+    else if (a === 'plate') { usePlate(); renderBag(); }
     else if (a.charAt(0) === 'w') { equip(parseInt(a.charAt(1), 10)); renderBag(); }
   }
 
@@ -1421,7 +1467,7 @@ body.touch #runBtn { display:flex; }
       for (var k = 0; k < 4; k++) { var ps = nearSpot(cs.x, cs.z); var eb = makeBot(ps.x, ps.z, tm, sc); eb.idx = k; eb.sq = sq; sq.push(eb); bots.push(eb); }
     }
     matchT = 0; kills = 0; reloadT = 0; fireT = 0; firing = false; zoneR = ZONE0; dmgFlash = 0;
-    slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; hasBag = false;
+    slots = ['pistol', null, null]; slotMag = [12, 0, 0]; cur = 0; mag = 12; reserve = 36; meds = 0; armor = 0; bands = 0; plates = 0; hasBag = false;
     toggleBag(false); setRun(false); setStance(0); py = 0; vy = 0; eyeH = 1.65; nearLoot = null; pickShown = ''; $('pickBtn').hidden = true; applyGunLook(); scatterLoot(); spawnVehicles();
     setScope(false); vault = null; vaultY = 0; state = 'play'; $('overlay').hidden = true;
     initAudio(); sfx('start');
