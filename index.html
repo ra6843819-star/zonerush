@@ -152,7 +152,7 @@ body.touch #runBtn { display:flex; }
     <p id="ovText">48 खिलाड़ी, 12 टीमें — आपकी टीम में 4 लोग (3 साथी नीले रंग के, सिर के ऊपर नीला निशान)। सिकुड़ते लाल ज़ोन में रहिए और आख़िरी टीम बनिए।</p>
     <p id="ovHelp"></p>
     <button class="btn" id="startBtn" type="button">मैच शुरू करें</button>
-    <p style="font-size:.75rem;opacity:.7">संस्करण 28 · बहुत बड़ा नक्शा: नदियाँ, पुल, सड़कें</p>
+    <p style="font-size:.75rem;opacity:.7">संस्करण 29 · तेज़ गोली (पिछला: बड़ा नक्शा, नदियाँ, पुल)</p>
   </div>
 </div>
 
@@ -1245,7 +1245,7 @@ body.touch #runBtn { display:flex; }
     var spd = Math.sqrt(mx * mx + mz * mz) * speed; b.rig.ph += dt * spd * 1.7; poseHuman(b.rig, b.rig.ph, spd > 0.3);
   }
 
-  var bullets = [], bulletGeo = new THREE.BoxGeometry(0.22, 0.22, 3);
+  var bullets = [], bulletGeo = new THREE.BoxGeometry(0.2, 0.2, 7);
   var bulletMats = { p: new THREE.MeshBasicMaterial({ color: 0xffe27a, fog: false }), b: new THREE.MeshBasicMaterial({ color: 0xff5a3c, fog: false }) };
   function spawnBullet(from, to, kind) {
     var dir = to.clone().sub(from), dist = dir.length();
@@ -1253,7 +1253,7 @@ body.touch #runBtn { display:flex; }
     dir.divideScalar(dist);
     var m = new THREE.Mesh(bulletGeo, bulletMats[kind]);
     m.position.copy(from); m.lookAt(to); scene.add(m);
-    bullets.push({ m: m, dir: dir, left: dist, speed: 95 });
+    bullets.push({ m: m, dir: dir, left: dist, speed: 420 });
   }
   function updateBullets(dt) {
     for (var i = bullets.length - 1; i >= 0; i--) {
